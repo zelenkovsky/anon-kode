@@ -11,19 +11,22 @@
   "author": "Anon Kode <anon@kode.com>",
   "license": "",
   "description": "Use Anon Kode, Anon's AI assistant, right from your terminal. Anon Kode can understand your codebase, edit files, run terminal commands, and handle entire workflows for you.",
-  "homepage": "https://github.com/anon-kode/kode",
+  "homepage": "https://github.com/dnakov/anon-kode",
   "repository": {
     "type": "git",
-    "url": "https://github.com/anon-kode/kode.git"
+    "url": "https://github.com/dnakov/anon-kode.git"
   },
   "bugs": {
-    "url": "https://github.com/anon-kode/kode/issues"
+    "url": "https://github.com/dnakov/anon-kode/issues"
   },
   "files": [
     "cli.mjs",
     "yoga.wasm"
   ],
-  "scripts": {},
+  "scripts": {
+    "dev": "tsx ./src/entrypoints/cli.tsx",
+    "build": "bun build src/entrypoints/cli.tsx --minify --outfile cli.mjs --target=node"
+  },
   "optionalDependencies": {
     "@img/sharp-darwin-arm64": "^0.33.5",
     "@img/sharp-linux-arm": "^0.33.5",
@@ -61,11 +64,14 @@
     "marked": "^15.0.7",
     "openai": "^4.86.1",
     "react": "18.3.1",
-    "react-devtools-core": "^6.1.1",
     "shell-quote": "^1.8.2",
     "spawn-rx": "^5.1.2",
     "wrap-ansi": "^9.0.0",
     "zod": "^3.24.2",
     "zod-to-json-schema": "^3.24.3"
+  },
+  "devDependencies": {
+    "react-devtools-core": "^6.1.1",
+    "tsx": "^4.19.3"
   }
 }
