@@ -7,6 +7,7 @@ import {
   GlobalConfig,
   saveGlobalConfig,
   normalizeApiKeyForConfig,
+  ProviderType,
 } from '../utils/config.js'
 import { getGlobalConfig } from '../utils/config'
 import chalk from 'chalk'
@@ -60,6 +61,18 @@ export function Config({ onClose }: Props): React.ReactNode {
   // TODO: Add MCP servers
   const settings: Setting[] = [
     // Global settings
+    {
+      id: 'provider',
+      label: 'AI Provider',
+      value: globalConfig.primaryProvider ?? 'anthropic',
+      options: ['anthropic', 'openai', 'custom'],
+      type: 'enum',
+      onChange(provider: ProviderType) {
+        const config = { ...getGlobalConfig(), primaryProvider: provider }
+        saveGlobalConfig(config)
+        setGlobalConfig(config)
+      },
+    },
     {
       id: 'smallModelName',
       label: 'Small model name',

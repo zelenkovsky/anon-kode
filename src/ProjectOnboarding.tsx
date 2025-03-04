@@ -95,7 +95,7 @@ export default function ProjectOnboarding({
                 items.push(
                   <OrderedList.Item key="workspace">
                     <Text color={theme.secondaryText}>
-                      Ask Claude to create a new app or clone a repository.
+                      Ask Kode to create a new app or clone a repository.
                     </Text>
                   </OrderedList.Item>,
                 )
@@ -125,7 +125,7 @@ export default function ProjectOnboarding({
               items.push(
                 <OrderedList.Item key="questions">
                   <Text color={theme.secondaryText}>
-                    Ask Claude questions about your codebase.
+                    Ask Kode questions about your codebase.
                   </Text>
                 </OrderedList.Item>,
               )
@@ -133,7 +133,7 @@ export default function ProjectOnboarding({
               items.push(
                 <OrderedList.Item key="changes">
                   <Text color={theme.secondaryText}>
-                    Ask Claude to implement changes to your codebase.
+                    Ask Kode to implement changes to your codebase.
                   </Text>
                 </OrderedList.Item>,
               )
@@ -167,7 +167,7 @@ export default function ProjectOnboarding({
 
       {workspaceDir === homedir() && (
         <Text color={getTheme().warning}>
-          Note: You have launched <Text bold>claude</Text> in your home
+          Note: You have launched <Text bold>anon-code</Text> in your home
           directory. For the best experience, launch it in a project directory
           instead.
         </Text>

@@ -85,6 +85,17 @@ export type NotificationChannel =
   | 'iterm2_with_bell'
   | 'notifications_disabled'
 
+export type ProviderType =
+  | 'anthropic'
+  | 'openai'
+  | 'mistral'
+  | 'deepseek'
+  | 'xai'
+  | 'groq'
+  | 'gemini'
+  | 'ollama'
+  | 'custom'
+
 export type AccountInfo = {
   accountUuid: string
   emailAddress: string
@@ -110,6 +121,7 @@ export type GlobalConfig = {
     rejected?: string[]
   }
   primaryApiKey?: string
+  primaryProvider?: ProviderType
   largeModelBaseURL?: string
   largeModelName?: string
   largeModelApiKey?: string
@@ -129,6 +141,7 @@ export const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
   theme: 'dark' as ThemeNames,
   preferredNotifChannel: 'iterm2',
   verbose: false,
+  primaryProvider: 'anthropic' as ProviderType,
   customApiKeyResponses: {
     approved: [],
     rejected: [],
@@ -144,6 +157,7 @@ export const GLOBAL_CONFIG_KEYS = [
   'verbose',
   'customApiKeyResponses',
   'primaryApiKey',
+  'primaryProvider',
   'preferredNotifChannel',
   'shiftEnterKeyBindingInstalled',
 ] as const

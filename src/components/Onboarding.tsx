@@ -1,28 +1,22 @@
-import React, { useMemo, useState } from 'react'
+import React, { useState } from 'react'
 import { PRODUCT_NAME } from '../constants/product'
 import { Box, Newline, Text, useInput } from 'ink'
 import {
   getGlobalConfig,
   saveGlobalConfig,
-  getCustomApiKeyStatus,
-  normalizeApiKeyForConfig,
   DEFAULT_GLOBAL_CONFIG,
+  ProviderType,
 } from '../utils/config.js'
 import { OrderedList } from '@inkjs/ui'
 import { useExitOnCtrlCD } from '../hooks/useExitOnCtrlCD'
 import { MIN_LOGO_WIDTH } from './Logo'
-// import { ConsoleOAuthFlow } from './ConsoleOAuthFlow'
-import { ApproveApiKey } from './ApproveApiKey'
 import { Select } from './CustomSelect/select'
 import { StructuredDiff } from './StructuredDiff'
 import { getTheme, type ThemeNames } from '../utils/theme'
-import { isAnthropicAuthEnabled } from '../utils/auth'
-import Link from './Link'
 import { clearTerminal } from '../utils/terminal'
 import { PressEnterToContinue } from './PressEnterToContinue'
-import { MACRO } from '../constants/macros'
-import { Config } from './Config'
-type StepId = 'theme' | 'oauth' | 'api-key' | 'usage' | 'security' | 'config'
+import { ModelSelector } from './ModelSelector'
+type StepId = 'theme' | 'usage' | 'providers' | 'model'
 
 interface OnboardingStep {
   id: StepId
@@ -35,9 +29,9 @@ type Props = {
 
 export function Onboarding({ onDone }: Props): React.ReactNode {
   const [currentStepIndex, setCurrentStepIndex] = useState(0)
-  const [showConfig, setShowConfig] = useState(false)
+  const [showModelSelector, setShowModelSelector] = useState(false)
   const config = getGlobalConfig()
-  const oauthEnabled = isAnthropicAuthEnabled()
+
   const [selectedTheme, setSelectedTheme] = useState(
     DEFAULT_GLOBAL_CONFIG.theme,
   )
@@ -61,6 +55,16 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
     setSelectedTheme(newTheme as ThemeNames)
   }
 
+  function handleProviderSelectionDone() {
+    // After model selection is done, go to the next step
+    goToNextStep()
+  }
+  
+  function handleModelSelectionDone() {
+    // After final model selection is done, complete onboarding
+    onDone()
+  }
+
   const exitState = useExitOnCtrlCD(() => process.exit(0))
 
   useInput(async (_, key) => {
@@ -68,18 +72,16 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
     if (
       key.return &&
       currentStep &&
-      ['usage', 'security', 'config'].includes(currentStep.id)
+      ['usage', 'providers', 'model'].includes(currentStep.id)
     ) {
-      if (currentStep.id === 'config') {
-        // Navigate to Config component
-        setShowConfig(true)
+      if (currentStep.id === 'model') {
+        // Navigate to ModelSelector component
+        setShowModelSelector(true)
       } else if (currentStepIndex === steps.length - 1) {
         onDone()
       } else {
         // HACK: for some reason there's now a jump here otherwise :(
-        if (currentStep.id === 'security') {
-          await clearTerminal()
-        }
+        await clearTerminal()
         goToNextStep()
       }
     }
@@ -126,7 +128,7 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
               lines: [
                 'function greet() {',
                 '-  console.log("Hello, World!");',
-                '+  console.log("Hello, Claude!");',
+                '+  console.log("Hello, anon!");',
                 '}',
               ],
             }}
@@ -139,42 +141,14 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
     </Box>
   )
 
-  const securityStep = (
+  const providersStep = (
     <Box flexDirection="column" gap={1} paddingLeft={1}>
-      <Text bold>Security notes:</Text>
       <Box flexDirection="column" width={70}>
-        <OrderedList>
-          <OrderedList.Item>
-            <Text>Claude Code is currently in research preview</Text>
-            <Text color={theme.secondaryText} wrap="wrap">
-              This beta version may have limitations or unexpected behaviors.
-              <Newline />
-              Run /bug at any time to report issues.
-              <Newline />
-            </Text>
-          </OrderedList.Item>
-          <OrderedList.Item>
-            <Text>Claude can make mistakes</Text>
-            <Text color={theme.secondaryText} wrap="wrap">
-              You should always review Claude&apos;s responses, especially when
-              <Newline />
-              running code.
-              <Newline />
-            </Text>
-          </OrderedList.Item>
-          <OrderedList.Item>
-            <Text>
-              Due to prompt injection risks, only use it with code you trust
-            </Text>
-            <Text color={theme.secondaryText} wrap="wrap">
-              For more details see:
-              <Newline />
-              <Link url="https://docs.anthropic.com/s/claude-code-security" />
-            </Text>
-          </OrderedList.Item>
-        </OrderedList>
+        <Text color={theme.secondaryText}>
+          Next, let's select your preferred AI provider and model.
+        </Text>
       </Box>
-      <PressEnterToContinue />
+      <ModelSelector onDone={handleProviderSelectionDone} />
     </Box>
   )
 
@@ -182,8 +156,12 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
     <Box flexDirection="column" gap={1} paddingLeft={1}>
       <Text bold>Using {PRODUCT_NAME} effectively:</Text>
       <Box flexDirection="column" width={70}>
-        <OrderedList>
-          <OrderedList.Item>
+        <OrderedList
+          children={[]}
+        >
+          <OrderedList.Item
+            children={[]}
+          >
             <Text>
               Start in your project directory
               <Newline />
@@ -193,7 +171,9 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
               <Newline />
             </Text>
           </OrderedList.Item>
-          <OrderedList.Item>
+          <OrderedList.Item
+            children={[]}
+          >
             <Text>
               Use {PRODUCT_NAME} as a development partner
               <Newline />
@@ -205,7 +185,9 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
               </Text>
             </Text>
           </OrderedList.Item>
-          <OrderedList.Item>
+          <OrderedList.Item
+            children={[]}
+          >
             <Text>
               Provide clear context
               <Newline />
@@ -216,88 +198,39 @@ export function Onboarding({ onDone }: Props): React.ReactNode {
             </Text>
           </OrderedList.Item>
         </OrderedList>
-        {/* <Box>
-          <Text>
-            For more details on {PRODUCT_NAME}, see:
-            <Newline />
-            <Link url={MACRO.README_URL} />
-          </Text>
-        </Box> */}
       </Box>
       <PressEnterToContinue />
     </Box>
   )
 
-  const configStep = (
+  const modelStep = (
     <Box flexDirection="column" gap={1} paddingLeft={1}>
-      <Text bold>Configure your settings:</Text>
+      <Text bold>Configure your models:</Text>
       <Box flexDirection="column" width={70}>
         <Text>
-          You can customize {PRODUCT_NAME} to fit your preferences.
+          You can customize which models {PRODUCT_NAME} uses for different tasks.
           <Newline />
           <Text color={theme.secondaryText}>
-            Let's take a look at the available configuration options.
+            Let's set up your preferred models for large and small tasks.
           </Text>
         </Text>
         <Box marginTop={1}>
-          <Text>Press <Text color={theme.suggestion}>Enter</Text> to continue to the configuration screen.</Text>
+          <Text>Press <Text color={theme.suggestion}>Enter</Text> to continue to the model selection screen.</Text>
         </Box>
       </Box>
       <PressEnterToContinue />
     </Box>
   )
 
-  // Create the steps array - determine which steps to include based on reAuth and oauthEnabled
-  const apiKeyNeedingApproval = useMemo(() => {
-    if (process.env.USER_TYPE !== 'ant') {
-      return ''
-    }
-    // Add API key step if needed
-    if (!process.env.ANTHROPIC_API_KEY) {
-      return ''
-    }
-    const customApiKeyTruncated = normalizeApiKeyForConfig(
-      process.env.ANTHROPIC_API_KEY!,
-    )
-    if (getCustomApiKeyStatus(customApiKeyTruncated) === 'new') {
-      return customApiKeyTruncated
-    }
-  }, [])
-
   const steps: OnboardingStep[] = []
   steps.push({ id: 'theme', component: themeStep })
-
-  // // Add OAuth step if Anthropic auth is enabled and user is not logged in
-  // if (oauthEnabled) {
-  //   steps.push({
-  //     id: 'oauth',
-  //     component: <ConsoleOAuthFlow onDone={goToNextStep} />,
-  //   })
-  // }
-
-  // Add API key step if needed
-  if (apiKeyNeedingApproval) {
-    steps.push({
-      id: 'api-key',
-      component: (
-        <ApproveApiKey
-          customApiKeyTruncated={apiKeyNeedingApproval}
-          onDone={goToNextStep}
-        />
-      ),
-    })
-  }
-
-  // Add usage and security steps
   steps.push({ id: 'usage', component: usageStep })
-  steps.push({ id: 'security', component: securityStep })
-  
-  // Add config step as the final step
-  steps.push({ id: 'config', component: configStep })
 
-  // If we're showing the config screen, render it directly
-  if (showConfig) {
-    return <Config onClose={onDone} />
+  steps.push({ id: 'model', component: modelStep })
+
+  // If we're showing the model selector screen, render it directly
+  if (showModelSelector) {
+    return <ModelSelector onDone={handleModelSelectionDone} />
   }
   
   return (
