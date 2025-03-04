@@ -715,13 +715,15 @@ async function queryOpenAI(
 
   
   for (const tool of toolSchemas) {
-    if(model.startsWith('gpt-')) {
+    if(model.match(/^gpt-|^o\d-mini/)) {
       if(tool.function.description.length > 1024) {
         tool.function.description = tool.function.description.slice(0, 1024)
       }
     }
     delete tool.function['$schema']
   }
+
+  const maxTokensParam = model.match(/^o\d-mini/) ? 'max_completion_tokens' : 'max_tokens';
 
   let start = Date.now()
   let attemptNumber = 0
@@ -734,7 +736,7 @@ async function queryOpenAI(
 
       const s = openai.beta.chat.completions.stream({
         model,
-        max_tokens: Math.max(
+        [maxTokensParam]: Math.max(
             maxThinkingTokens + 1,
             getMaxTokensForModel(model),
           ),
