@@ -101,6 +101,9 @@ importers:
       react:
         specifier: 18.3.1
         version: 18.3.1
+      semver:
+        specifier: ^7.7.1
+        version: 7.7.1
       shell-quote:
         specifier: ^1.8.2
         version: 1.8.2
