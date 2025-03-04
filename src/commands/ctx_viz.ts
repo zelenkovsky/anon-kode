@@ -159,7 +159,7 @@ const command: Command = {
   name: 'ctx-viz',
   description:
     '[ANT-ONLY] Show token usage breakdown for the current conversation context',
-  isEnabled: process.env.USER_TYPE === 'ant',
+  isEnabled: true,
   isHidden: false,
   type: 'local',
 

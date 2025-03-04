@@ -219,7 +219,7 @@ async function setup(
   cleanupOldMessageFilesInBackground()
   getExampleCommands() // Pre-fetch example commands
   getContext() // Pre-fetch all context data at once
-  initializeStatsig() // Kick off statsig initialization
+  // initializeStatsig() // Kick off statsig initialization
 
   // Migrate old iterm2KeyBindingInstalled config to new shiftEnterKeyBindingInstalled
   const globalConfig = getGlobalConfig()
@@ -819,7 +819,7 @@ ${commandList}`,
       )
       .option('-c, --cwd <cwd>', 'The current working directory', String, cwd())
       .option(
-        '-ea, --enable-architect',
+        '-e, --enable-architect',
         'Enable the Architect tool',
         () => true,
       )

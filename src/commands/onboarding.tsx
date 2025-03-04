@@ -9,7 +9,7 @@ export default {
   type: 'local-jsx',
   name: 'onboarding',
   description: '[ANT-ONLY] Run through the onboarding flow',
-  isEnabled: process.env.USER_TYPE === 'ant',
+  isEnabled: true,
   isHidden: false,
   async call(onDone, context) {
     await clearTerminal()

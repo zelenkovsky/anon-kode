@@ -22,7 +22,6 @@ export function Logo({
   const isCustomApiKey = !isDefaultApiKey()
   const isCustomModel = !isDefaultModel && Boolean(currentModel)
   const hasOverrides =
-    process.env.USER_TYPE === 'ant' &&
     Boolean(
       isCustomApiKey ||
         process.env.DISABLE_PROMPT_CACHING ||
@@ -69,7 +68,6 @@ export function Logo({
           <Box paddingLeft={2} flexDirection="column" gap={1}>
             <Text color={theme.secondaryText} italic>
               /help for help
-              {process.env.USER_TYPE === 'ant' && <> · https://go/claude-cli</>}
             </Text>
             <Text color={theme.secondaryText}>cwd: {getCwd()}</Text>
           </Box>

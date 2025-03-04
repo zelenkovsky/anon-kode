@@ -8,7 +8,7 @@ import { USE_BEDROCK, USE_VERTEX } from './model'
 export async function getMaxThinkingTokens(
   messages: Message[],
 ): Promise<number> {
-  if (process.env.USER_TYPE === 'ant' && process.env.MAX_THINKING_TOKENS) {
+  if (process.env.MAX_THINKING_TOKENS) {
     const tokens = parseInt(process.env.MAX_THINKING_TOKENS, 10)
     logEvent('tengu_thinking', {
       method: 'scratchpad',

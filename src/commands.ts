@@ -90,7 +90,7 @@ const COMMANDS = memoize((): Command[] => [
   review,
   terminalSetup,
   ...(isAnthropicAuthEnabled() ? [logout, login()] : []),
-  ...(process.env.USER_TYPE === 'ant' ? INTERNAL_ONLY_COMMANDS : []),
+  ...INTERNAL_ONLY_COMMANDS,
 ])
 
 export const getCommands = memoize(async (): Promise<Command[]> => {

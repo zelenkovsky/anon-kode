@@ -8,8 +8,8 @@ export default {
   type: 'local-jsx',
   name: 'resume',
   description: '[ANT-ONLY] Resume a previous conversation',
-  isEnabled: process.env.USER_TYPE === 'ant',
-  isHidden: process.env.USER_TYPE !== 'ant',
+  isEnabled: true,
+  isHidden: false,
   userFacingName() {
     return 'resume'
   },

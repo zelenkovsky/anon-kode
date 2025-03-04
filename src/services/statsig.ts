@@ -91,7 +91,6 @@ export function logEvent(
 
     // Debug logging when debug mode is enabled
     if (
-      process.env.USER_TYPE === 'ant' &&
       (process.argv.includes('--debug') || process.argv.includes('-d'))
     ) {
       console.log(
@@ -105,30 +104,30 @@ export function logEvent(
       eventName,
       metadata: eventMetadata,
     }
-    statsigClient.logEvent(event)
+    // statsigClient.logEvent(event)
   })
 }
 
 export const checkGate = memoize(async (gateName: string): Promise<boolean> => {
   return true;
-  if (env.isCI || process.env.NODE_ENV === 'test') {
-    return false
-  }
-  const statsigClient = await initializeStatsig()
-  if (!statsigClient) return false
+  // if (env.isCI || process.env.NODE_ENV === 'test') {
+  //   return false
+  // }
+  // const statsigClient = await initializeStatsig()
+  // if (!statsigClient) return false
 
-  const value = statsigClient.checkGate(gateName)
-  gateValues[gateName] = value
-  return value
+  // const value = statsigClient.checkGate(gateName)
+  // gateValues[gateName] = value
+  // return value
 })
 
 export const useStatsigGate = (gateName: string, defaultValue = false) => {
   return true;
-  const [gateValue, setGateValue] = React.useState(defaultValue)
-  React.useEffect(() => {
-    checkGate(gateName).then(setGateValue)
-  }, [gateName])
-  return gateValue
+  // const [gateValue, setGateValue] = React.useState(defaultValue)
+  // React.useEffect(() => {
+  //   checkGate(gateName).then(setGateValue)
+  // }, [gateName])
+  // return gateValue
 }
 
 export function getGateValues(): Record<string, boolean> {
@@ -138,18 +137,18 @@ export function getGateValues(): Record<string, boolean> {
 export const getExperimentValue = memoize(
   async <T>(experimentName: string, defaultValue: T): Promise<T> => {
     return defaultValue;
-    if (env.isCI || process.env.NODE_ENV === 'test') {
-      return defaultValue
-    }
-    const statsigClient = await initializeStatsig()
-    if (!statsigClient) return defaultValue
+    // if (env.isCI || process.env.NODE_ENV === 'test') {
+    //   return defaultValue
+    // }
+    // const statsigClient = await initializeStatsig()
+    // if (!statsigClient) return defaultValue
 
-    const experiment = statsigClient.getExperiment(experimentName)
-    if (Object.keys(experiment.value).length === 0) {
-      logError(`getExperimentValue got empty value for ${experimentName}`)
-      return defaultValue
-    }
-    return experiment.value as T
+    // const experiment = statsigClient.getExperiment(experimentName)
+    // if (Object.keys(experiment.value).length === 0) {
+    //   logError(`getExperimentValue got empty value for ${experimentName}`)
+    //   return defaultValue
+    // }
+    // return experiment.value as T
   },
 )
 
@@ -159,16 +158,16 @@ export const getDynamicConfig = async <T>(
   defaultValue: T,
 ): Promise<T> => {
   return defaultValue;
-  if (env.isCI || process.env.NODE_ENV === 'test') {
-    return defaultValue
-  }
-  const statsigClient = await initializeStatsig()
-  if (!statsigClient) return defaultValue
+  // if (env.isCI || process.env.NODE_ENV === 'test') {
+  //   return defaultValue
+  // }
+  // const statsigClient = await initializeStatsig()
+  // if (!statsigClient) return defaultValue
 
-  const config = statsigClient.getDynamicConfig(configName)
-  if (Object.keys(config.value).length === 0) {
-    logError(`getDynamicConfig got empty value for ${configName}`)
-    return defaultValue
-  }
-  return config.value as T
+  // const config = statsigClient.getDynamicConfig(configName)
+  // if (Object.keys(config.value).length === 0) {
+  //   logError(`getDynamicConfig got empty value for ${configName}`)
+  //   return defaultValue
+  // }
+  // return config.value as T
 }

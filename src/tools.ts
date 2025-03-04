@@ -32,7 +32,7 @@ export const getAllTools = (): Tool[] => {
     NotebookReadTool,
     NotebookEditTool,
     ThinkTool,
-    ...(process.env.USER_TYPE === 'ant' ? ANT_ONLY_TOOLS : []),
+    ...ANT_ONLY_TOOLS,
   ]
 }
 
