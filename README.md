@@ -29,3 +29,25 @@ Use at own risk.
 ## YOUR DATA
 
 - All telemetry removed
+
+## DEVELOPMENT
+
+### CI/CD Workflow
+
+This project uses GitHub Actions for automated versioning, building and publishing:
+
+1. **Release Workflow** - Single workflow that handles everything
+   - Trigger manually from GitHub Actions tab
+   - Choose version type: patch, minor, or major
+   - The workflow will:
+     - Bump the version in package.json
+     - Build the project
+     - Commit changes and create a tag
+     - Publish to npm
+
+To release a new version:
+1. Go to Actions → Release → Run workflow
+2. Select version type (patch/minor/major)
+3. Click "Run workflow"
+
+Note: Requires `NPM_TOKEN` secret to be set in repository settings.
