@@ -58,7 +58,7 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
   ]
   
   // Get available providers from models.ts
-  const availableProviders = Object.keys(models)
+  const availableProviders = Object.keys(providers)
   
   // Create provider options with nice labels
   const providerOptions = availableProviders.map(provider => {
@@ -191,18 +191,20 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
       const response = await openai.models.list()
       
       // Transform the response into our ModelInfo format
-      const fetchedModels = response.data
-        .map(model => ({
+      const fetchedModels = [] 
+      for (const model of response.data) {
+        const modelInfo = models[selectedProvider as keyof typeof models]?.find(m => m.model === model.id)
+        fetchedModels.push({
           model: model.id,
           provider: 'openai',
-          // We don't have detailed info from the API, so we'll use some defaults
-          max_tokens: model.id.includes('gpt-4') ? 128000 : 16000,
-          supports_vision: model.id.includes('vision'),
-          supports_function_calling: !model.id.includes('instruct')
-        }))
-        
-        setAvailableModels(fetchedModels)
-    
+          max_tokens: modelInfo?.max_tokens || 8000,
+          supports_vision: modelInfo?.supports_vision || false,
+          supports_function_calling: modelInfo?.supports_function_calling || false
+        })
+      }
+      
+      setAvailableModels(fetchedModels)
+      
       // After fetching models, show the model selection screen
       setCurrentScreen('model')
       // Reset search query when changing providers

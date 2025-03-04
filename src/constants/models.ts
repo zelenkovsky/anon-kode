@@ -780,6 +780,10 @@ export const providers = {
     "name": "OpenAI",
     "baseURL": "https://api.openai.com/v1"
   },
+  "openrouter": {
+    "name": "OpenRouter",
+    "baseURL": "https://openrouter.ai/api/v1"
+  },
   "anthropic": {
     "name": "Anthropic",
     "baseURL": "https://api.anthropic.com/v1",
