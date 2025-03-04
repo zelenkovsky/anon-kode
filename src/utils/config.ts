@@ -116,6 +116,7 @@ export type GlobalConfig = {
   smallModelBaseURL?: string
   smallModelName?: string
   smallModelApiKey?: string 
+  maxTokens?: number
   hasAcknowledgedCostThreshold?: boolean
   oauthAccount?: AccountInfo
   iterm2KeyBindingInstalled?: boolean // Legacy - keeping for backward compatibility

@@ -40,6 +40,13 @@ type Setting =
       onChange(value: string): void
       type: 'string'
     }
+  | {
+      id: string
+      label: string
+      value: number
+      onChange(value: number): void
+      type: 'number'
+    }
 
 export function Config({ onClose }: Props): React.ReactNode {
   const [globalConfig, setGlobalConfig] = useState(getGlobalConfig())
@@ -115,6 +122,17 @@ export function Config({ onClose }: Props): React.ReactNode {
       type: 'string',
       onChange(value: string) {
         const config = { ...getGlobalConfig(), largeModelBaseURL: value }
+        saveGlobalConfig(config)
+        setGlobalConfig(config)
+      },
+    },
+    {
+      id: 'maxTokens',
+      label: 'Max tokens',
+      value: globalConfig.maxTokens ?? 8192,
+      type: 'number',
+      onChange(value: number) {
+        const config = { ...getGlobalConfig(), maxTokens: value }
         saveGlobalConfig(config)
         setGlobalConfig(config)
       },

@@ -159,7 +159,10 @@ export function useTextInput({
     ['d', handleCtrlD],
     ['e', () => cursor.endOfLine()],
     ['f', () => cursor.right()],
-    ['h', () => cursor.backspace()],
+    ['h', () => {
+      maybeClearImagePasteErrorTimeout()
+      return cursor.backspace()
+    }],
     ['k', () => cursor.deleteToLineEnd()],
     ['l', () => clear()],
     ['n', () => downOrHistoryDown()],
@@ -213,7 +216,37 @@ export function useTextInput({
     return cursorDown
   }
 
+  function onInput(input: string, key: Key): void {
+    // Direct handling for backspace or delete (which is being detected as delete)
+    if (key.backspace || key.delete || input === '\b' || input === '\x7f' || input === '\x08') {
+      const nextCursor = cursor.backspace()
+      if (!cursor.equals(nextCursor)) {
+        setOffset(nextCursor.offset)
+        if (cursor.text !== nextCursor.text) {
+          onChange(nextCursor.text)
+        }
+      }
+      return
+    }
+    
+    const nextCursor = mapKey(key)(input)
+    if (nextCursor) {
+      if (!cursor.equals(nextCursor)) {
+        setOffset(nextCursor.offset)
+        if (cursor.text !== nextCursor.text) {
+          onChange(nextCursor.text)
+        }
+      }
+    }
+  }
+
   function mapKey(key: Key): InputMapper {
+    // Direct handling for backspace or delete
+    if (key.backspace || key.delete) {
+      maybeClearImagePasteErrorTimeout()
+      return () => cursor.backspace()
+    }
+    
     switch (true) {
       case key.escape:
         return handleEscape
@@ -221,12 +254,6 @@ export function useTextInput({
         return () => cursor.prevWord()
       case key.rightArrow && (key.ctrl || key.meta || key.fn):
         return () => cursor.nextWord()
-      case key.backspace:
-        return key.meta
-          ? () => cursor.deleteWordBefore()
-          : () => cursor.backspace()
-      case key.delete:
-        return key.meta ? () => cursor.deleteToLineEnd() : () => cursor.del()
       case key.ctrl:
         return handleCtrl
       case key.home:
@@ -260,20 +287,12 @@ export function useTextInput({
         // End key
         case input == '\x1b[F' || input == '\x1b[4~':
           return cursor.endOfLine()
+        // Handle backspace character explicitly - this is the key fix
+        case input === '\b' || input === '\x7f' || input === '\x08':
+          maybeClearImagePasteErrorTimeout()
+          return cursor.backspace()
         default:
           return cursor.insert(input.replace(/\r/g, '\n'))
-      }
-    }
-  }
-
-  function onInput(input: string, key: Key): void {
-    const nextCursor = mapKey(key)(input)
-    if (nextCursor) {
-      if (!cursor.equals(nextCursor)) {
-        setOffset(nextCursor.offset)
-        if (cursor.text != nextCursor.text) {
-          onChange(nextCursor.text)
-        }
       }
     }
   }

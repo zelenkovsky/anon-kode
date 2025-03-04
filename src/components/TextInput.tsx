@@ -138,7 +138,7 @@ export default function TextInput({
   disableCursorMovementForUpDownKeys = false,
   cursorOffset,
   onChangeCursorOffset,
-}: Props): JSX.Element {
+}: Props) {
   const { onInput, renderedValue } = useTextInput({
     value: originalValue,
     onChange,
@@ -186,6 +186,16 @@ export default function TextInput({
   }
 
   const wrappedOnInput = (input: string, key: Key): void => {
+    // Special handling for backspace or delete
+    if (key.backspace || key.delete || input === '\b' || input === '\x7f' || input === '\x08') {
+      // Ensure backspace is handled directly
+      onInput(input, {
+        ...key,
+        backspace: true
+      })
+      return
+    }
+    
     // Handle pastes (>800 chars)
     // Usually we get one or two input characters at a time. If we
     // get a bunch, the user has probably pasted.
