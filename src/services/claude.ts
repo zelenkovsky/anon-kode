@@ -670,11 +670,15 @@ async function queryOpenAI(
   const openaiMessages = convertAnthropicMessagesToOpenAIMessages(messages)
 
   const startIncludingRetries = Date.now()
-  for (const tool of toolSchemas) {
-    if(tool.function.description.length > 1024) {
-      tool.function.description = tool.function.description.slice(0, 1024)
+
+  if(model.startsWith('gpt-')) {
+    for (const tool of toolSchemas) {
+      if(tool.function.description.length > 1024) {
+        tool.function.description = tool.function.description.slice(0, 1024)
+      }
     }
   }
+  
   let start = Date.now()
   let attemptNumber = 0
   let response
