@@ -765,10 +765,10 @@ async function queryOpenAI(
   const durationMs = Date.now() - start
   const durationMsIncludingRetries = Date.now() - startIncludingRetries
 
-  const inputTokens = response.usage.prompt_tokens
-  const outputTokens = response.usage.completion_tokens
-  const cacheReadInputTokens = response.usage.prompt_token_details?.cached_tokens ?? 0
-  const cacheCreationInputTokens = response.usage.prompt_token_details?.cached_tokens ?? 0
+  const inputTokens = response.usage?.prompt_tokens ?? 0
+  const outputTokens = response.usage?.completion_tokens ?? 0
+  const cacheReadInputTokens = response.usage?.prompt_token_details?.cached_tokens ?? 0
+  const cacheCreationInputTokens = response.usage?.prompt_token_details?.cached_tokens ?? 0
   const costUSD =
     (inputTokens / 1_000_000) * SONNET_COST_PER_MILLION_INPUT_TOKENS +
     (outputTokens / 1_000_000) * SONNET_COST_PER_MILLION_OUTPUT_TOKENS +
@@ -784,9 +784,9 @@ async function queryOpenAI(
       ...response,
       content: normalizeContentFromAPI(response.content),
       usage: {
-        input_tokens: response.usage.prompt_tokens,
-        output_tokens: response.usage.completion_tokens,
-        cache_read_input_tokens: response.usage.prompt_token_details?.cached_tokens ?? 0,
+        input_tokens: inputTokens,
+        output_tokens: outputTokens,
+        cache_read_input_tokens: cacheReadInputTokens,
         cache_creation_input_tokens: 0
       },
     },
