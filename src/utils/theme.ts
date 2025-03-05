@@ -22,7 +22,7 @@ export interface Theme {
 
 const lightTheme: Theme = {
   bashBorder: '#ff0087',
-  claude: '#D97757',
+  claude: '#5f97cd',
   permission: '#5769f7',
   secondaryBorder: '#999',
   text: '#000',
@@ -41,7 +41,7 @@ const lightTheme: Theme = {
 
 const lightDaltonizedTheme: Theme = {
   bashBorder: '#0066cc', // Blue instead of pink for better contrast
-  claude: '#ff9933', // Orange adjusted for deuteranopia
+  claude: '#5f97cd', // Orange adjusted for deuteranopia
   permission: '#3366ff', // Brighter blue for better visibility
   secondaryBorder: '#999',
   text: '#000',
@@ -79,7 +79,7 @@ const darkTheme: Theme = {
 
 const darkDaltonizedTheme: Theme = {
   bashBorder: '#3399ff', // Bright blue instead of pink
-  claude: '#ff9933', // Orange adjusted for deuteranopia
+  claude: '#5f97cd', // Orange adjusted for deuteranopia
   permission: '#99ccff', // Light blue for better contrast
   secondaryBorder: '#888',
   text: '#fff',

@@ -130,7 +130,8 @@ export default {
           "supports_prompt_caching": true,
           "supports_system_messages": true,
           "supports_response_schema": true,
-          "supports_tool_choice": true
+          "supports_tool_choice": true,
+          "supports_reasoning_effort": true
       },
       {
           "model": "o3-mini",
@@ -147,7 +148,8 @@ export default {
           "supports_vision": false,
           "supports_prompt_caching": true,
           "supports_response_schema": true,
-          "supports_tool_choice": true
+          "supports_tool_choice": true,
+          "supports_reasoning_effort": true
       },
       {
           "model": "o3-mini-2025-01-31",
@@ -164,7 +166,8 @@ export default {
           "supports_vision": false,
           "supports_prompt_caching": true,
           "supports_response_schema": true,
-          "supports_tool_choice": true
+          "supports_tool_choice": true,
+          "supports_reasoning_effort": true
       },
       {
           "model": "o1-2024-12-17",
@@ -182,7 +185,8 @@ export default {
           "supports_prompt_caching": true,
           "supports_system_messages": true,
           "supports_response_schema": true,
-          "supports_tool_choice": true
+          "supports_tool_choice": true,
+          "supports_reasoning_effort": true
       },
       {
           "model": "chatgpt-4o-latest",

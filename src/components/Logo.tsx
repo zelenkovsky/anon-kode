@@ -2,7 +2,7 @@ import { Box, Text, Newline } from 'ink'
 import * as React from 'react'
 import { getTheme } from '../utils/theme'
 import { PRODUCT_NAME } from '../constants/product'
-import { isDefaultApiKey, getAnthropicApiKey } from '../utils/config'
+import { isDefaultApiKey, getAnthropicApiKey, getGlobalConfig } from '../utils/config'
 import { getCwd } from '../utils/state'
 import type { WrappedClient } from '../services/mcpClient'
 
@@ -17,18 +17,16 @@ export function Logo({
 }): React.ReactNode {
   const width = Math.max(MIN_LOGO_WIDTH, getCwd().length + 12)
   const theme = getTheme()
-  const currentModel = process.env.ANTHROPIC_MODEL
+  const config = getGlobalConfig()
+  const currentModel = config.largeModelName && (config.largeModelName === config.smallModelName ? config.largeModelName : config.largeModelName + ' | ' + config.smallModelName)
   const apiKey = getAnthropicApiKey()
   const isCustomApiKey = !isDefaultApiKey()
-  const isCustomModel = !isDefaultModel && Boolean(currentModel)
   const hasOverrides =
     Boolean(
       isCustomApiKey ||
         process.env.DISABLE_PROMPT_CACHING ||
         process.env.API_TIMEOUT_MS ||
-        process.env.MAX_THINKING_TOKENS ||
-        process.env.ANTHROPIC_BASE_URL ||
-        isCustomModel,
+        process.env.MAX_THINKING_TOKENS
     )
 
   return (
@@ -70,7 +68,13 @@ export function Logo({
               /help for help
             </Text>
             <Text color={theme.secondaryText}>cwd: {getCwd()}</Text>
+            {currentModel && (
+                <Text color={theme.secondaryText}>
+                  Model: <Text bold>{currentModel}</Text>
+                </Text>
+              )}            
           </Box>
+          
           {hasOverrides && (
             <Box
               borderColor={theme.secondaryBorder}
@@ -87,11 +91,6 @@ export function Logo({
               <Box marginBottom={1}>
                 <Text color={theme.secondaryText}>Overrides (via env):</Text>
               </Box>
-              {isCustomModel && (
-                <Text color={theme.secondaryText}>
-                  • Model: <Text bold>{currentModel}</Text>
-                </Text>
-              )}
               {isCustomApiKey && apiKey ? (
                 <Text color={theme.secondaryText}>
                   • API Key:{' '}

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Box, Text, useInput } from 'ink'
 import { getTheme } from '../utils/theme'
 import { Select } from './CustomSelect/select'
@@ -13,9 +13,10 @@ import {
 import models, { providers } from '../constants/models'
 import TextInput from './TextInput'
 import OpenAI from 'openai'
-
+import chalk from 'chalk'
 type Props = {
   onDone: () => void
+  abortController?: AbortController
 }
 
 type ModelInfo = {
@@ -27,10 +28,67 @@ type ModelInfo = {
 // Define model type options
 type ModelTypeOption = 'both' | 'large' | 'small';
 
-export function ModelSelector({ onDone }: Props): React.ReactNode {
+// Define reasoning effort options
+type ReasoningEffortOption = 'low' | 'medium' | 'high';
+
+// Custom hook to handle Escape key navigation
+function useEscapeNavigation(onEscape: () => void, abortController?: AbortController) {
+  // Use a ref to track if we've handled the escape key
+  const handledRef = useRef(false);
+  
+  useInput((input, key) => {
+    if(key.escape) {
+      console.log('Escape key pressed', abortController?.signal?.aborted)
+    }
+    if (key.escape && !handledRef.current) {
+      handledRef.current = true;
+      // Reset after a short delay to allow for multiple escapes
+      setTimeout(() => {
+        handledRef.current = false;
+      }, 100);
+      onEscape();
+    }
+  }, { isActive: true });
+}
+
+function printModelConfig() {
+  const config = getGlobalConfig()
+  let res = `  ⎿  ${config.largeModelName} | ${config.largeModelMaxTokens} ${config.largeModelReasoningEffort ? config.largeModelReasoningEffort : ''}`
+  res += `  |  ${config.smallModelName} | ${config.smallModelMaxTokens} ${config.smallModelReasoningEffort ? config.smallModelReasoningEffort : ''}`
+  console.log(chalk.gray(res))
+}
+
+export function ModelSelector({ onDone: onDoneProp, abortController }: Props): React.ReactNode {
   const config = getGlobalConfig()
   const theme = getTheme()
+  const onDone = () => {
+    printModelConfig()
+    onDoneProp()
+  }
+  // Initialize the exit hook but don't use it for Escape key
   const exitState = useExitOnCtrlCD(() => process.exit(0))
+  
+  // Screen navigation stack
+  const [screenStack, setScreenStack] = useState<Array<'modelType' | 'provider' | 'apiKey' | 'model' | 'modelParams' | 'confirmation'>>(['modelType'])
+  
+  // Current screen is always the last item in the stack
+  const currentScreen = screenStack[screenStack.length - 1]
+  
+  // Function to navigate to a new screen
+  const navigateTo = (screen: 'modelType' | 'provider' | 'apiKey' | 'model' | 'modelParams' | 'confirmation') => {
+    setScreenStack(prev => [...prev, screen])
+  }
+  
+  // Function to go back to the previous screen
+  const goBack = () => {
+    if (screenStack.length > 1) {
+      // Remove the current screen from the stack
+      setScreenStack(prev => prev.slice(0, -1))
+    } else {
+      // If we're at the first screen, call onDone to exit
+      onDone()
+    }
+  }
   
   // State for model configuration
   const [selectedProvider, setSelectedProvider] = useState<ProviderType>(
@@ -39,8 +97,18 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
   const [selectedModel, setSelectedModel] = useState<string>('')
   const [apiKey, setApiKey] = useState<string>('')
   
+  // New state for model parameters
+  const [maxTokens, setMaxTokens] = useState<string>(
+    config.maxTokens?.toString() || ''
+  )
+  const [reasoningEffort, setReasoningEffort] = useState<ReasoningEffortOption>('medium')
+  const [supportsReasoningEffort, setSupportsReasoningEffort] = useState<boolean>(false)
+  
+  // Form focus state
+  const [activeFieldIndex, setActiveFieldIndex] = useState(0)
+  const [maxTokensCursorOffset, setMaxTokensCursorOffset] = useState<number>(0)
+  
   // UI state
-  const [currentScreen, setCurrentScreen] = useState<'modelType' | 'provider' | 'apiKey' | 'model' | 'confirmation'>('modelType')
   const [modelTypeToChange, setModelTypeToChange] = useState<ModelTypeOption>('both')
   
   // Search and model loading state
@@ -50,11 +118,19 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
   const [modelSearchQuery, setModelSearchQuery] = useState<string>('')
   const [modelSearchCursorOffset, setModelSearchCursorOffset] = useState<number>(0)
   const [cursorOffset, setCursorOffset] = useState<number>(0)
+  
   // Model type options
   const modelTypeOptions = [
     { label: 'Both Large and Small Models', value: 'both' },
     { label: 'Large Model Only', value: 'large' },
     { label: 'Small Model Only', value: 'small' }
+  ]
+  
+  // Reasoning effort options
+  const reasoningEffortOptions = [
+    { label: 'Low - Faster responses, less thorough reasoning', value: 'low' },
+    { label: 'Medium - Balanced speed and reasoning depth', value: 'medium' },
+    { label: 'High - Slower responses, more thorough reasoning', value: 'high' }
   ]
   
   // Get available providers from models.ts
@@ -88,10 +164,8 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
     const isInOurModels = ourModelNames.has(model.model)
     
     return {
-      label: `${isInOurModels ? '★ ' : ''}${model.model}${getModelDetails(model)}`,
-      value: model.model,
-      // Add a color property for highlighting
-      color: isInOurModels ? theme.suggestion : undefined
+      label: `${model.model}${getModelDetails(model)}`,
+      value: model.model
     }
   })
 
@@ -132,7 +206,7 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
   
   function handleModelTypeSelection(type: string) {
     setModelTypeToChange(type as ModelTypeOption)
-    setCurrentScreen('provider')
+    navigateTo('provider')
   }
 
   function handleProviderSelection(provider: string) {
@@ -145,33 +219,35 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
       onDone()
     } else {
       // For other providers, go to API key input
-      setCurrentScreen('apiKey')
+      navigateTo('apiKey')
     }
   }
 
   async function fetchGeminiModels() {
-    setIsLoadingModels(true)
-    setModelLoadError(null)
-    
     try {
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${apiKey}`)
 
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error?.message || `API error: ${response.status}`)
+      }
+
       const { models } = await response.json()
 
-      const geminiModels = models.filter((model: any) => model.supportedGenerationMethods.includes('generateContent')).map((model: any) => ({
-        model: model.name.replace('models/', ''),
-        provider: 'gemini',
-        max_tokens: model.outputTokenLimit,
-        supports_vision: model.supports_vision,
-        supports_function_calling: model.supports_function_calling
-      }))
+      const geminiModels = models
+        .filter((model: any) => model.supportedGenerationMethods.includes('generateContent'))
+        .map((model: any) => ({
+          model: model.name.replace('models/', ''),
+          provider: 'gemini',
+          max_tokens: model.outputTokenLimit,
+          supports_vision: model.supportedGenerationMethods.includes('generateContent'),
+          supports_function_calling: model.supportedGenerationMethods.includes('generateContent')
+        }))
 
-      setAvailableModels(geminiModels)
-      setCurrentScreen('model')
+      return geminiModels
     } catch (error) {
       setModelLoadError(error instanceof Error ? error.message : 'Unknown error')
-    } finally {
-      setIsLoadingModels(false)
+      throw error
     }
   }
   async function fetchModels() {
@@ -179,6 +255,15 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
     setModelLoadError(null)
     
     try {
+      // For Gemini, use the separate fetchGeminiModels function
+      if (selectedProvider === 'gemini') {
+        const geminiModels = await fetchGeminiModels()
+        setAvailableModels(geminiModels)
+        navigateTo('model')
+        return geminiModels
+      }
+      
+      // For all other providers, use the OpenAI client
       const baseURL = providers[selectedProvider]?.baseURL
 
       const openai = new OpenAI({
@@ -196,21 +281,24 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
         const modelInfo = models[selectedProvider as keyof typeof models]?.find(m => m.model === model.id)
         fetchedModels.push({
           model: model.id,
-          provider: 'openai',
-          max_tokens: modelInfo?.max_tokens || 8000,
+          provider: selectedProvider,
+          max_tokens: modelInfo?.max_output_tokens,
           supports_vision: modelInfo?.supports_vision || false,
-          supports_function_calling: modelInfo?.supports_function_calling || false
+          supports_function_calling: modelInfo?.supports_function_calling || false,
+          supports_reasoning_effort: modelInfo?.supports_reasoning_effort || false
         })
       }
       
       setAvailableModels(fetchedModels)
       
-      // After fetching models, show the model selection screen
-      setCurrentScreen('model')
-      // Reset search query when changing providers
-      setModelSearchQuery('')
+      // Navigate to model selection screen if models were loaded successfully
+      navigateTo('model')
+      
+      return fetchedModels
     } catch (error) {
-      setModelLoadError(error instanceof Error ? error.message : 'Unknown error')
+      console.error('Error fetching models:', error)
+      setModelLoadError(`Failed to load models: ${error.message}`)
+      throw error
     } finally {
       setIsLoadingModels(false)
     }
@@ -220,19 +308,41 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
     setApiKey(key)
     
     // Fetch models with the provided API key
-    if (selectedProvider === 'gemini') {
-      fetchGeminiModels()
-    } else {
-      fetchModels()
-    }
+    fetchModels()
+      .catch(error => {
+        setModelLoadError(`Error loading models: ${error.message}`)
+      })
   }
   
   function handleModelSelection(model: string) {
     setSelectedModel(model)
     
-    // Show confirmation screen instead of immediately saving
-    setCurrentScreen('confirmation')
+    // Check if the selected model supports reasoning_effort
+    const modelInfo = availableModels.find(m => m.model === model)
+    setSupportsReasoningEffort(modelInfo?.supports_reasoning_effort || false)
+    
+    // Prepopulate max tokens with the model's default value if available
+    if (modelInfo?.max_tokens) {
+      setMaxTokens(modelInfo.max_tokens.toString())
+      setMaxTokensCursorOffset(modelInfo.max_tokens.toString().length)
+    } else {
+      // If no model-specific max tokens, use the global config value or empty string
+      setMaxTokens(config.maxTokens?.toString() || '')
+      setMaxTokensCursorOffset(config.maxTokens?.toString().length || 0)
+    }
+    
+    // Go to model parameters screen
+    navigateTo('modelParams')
+    // Reset active field index
+    setActiveFieldIndex(0)
   }
+  
+  const handleModelParamsSubmit = () => {
+    // Values are already in state, no need to extract from form
+    // Navigate to confirmation screen
+    navigateTo('confirmation')
+  }
+
   
   function saveConfiguration(provider: ProviderType, model: string) {
     const baseURL = providers[provider]?.baseURL || ""
@@ -243,17 +353,31 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
     // Update the primary provider regardless of which model we're changing
     newConfig.primaryProvider = provider
     
+    
     // Update the appropriate model based on the selection
     if (modelTypeToChange === 'both' || modelTypeToChange === 'large') {
       newConfig.largeModelName = model
       newConfig.largeModelBaseURL = baseURL
       newConfig.largeModelApiKey = apiKey || config.largeModelApiKey
+      newConfig.largeModelMaxTokens = parseInt(maxTokens)
+      
+      // Save reasoning effort for large model if supported
+      if (supportsReasoningEffort) {
+        newConfig.largeModelReasoningEffort = reasoningEffort === 'low' ? false : 
+                                             reasoningEffort === 'high' ? true : undefined
+      }
     }
     
     if (modelTypeToChange === 'both' || modelTypeToChange === 'small') {
       newConfig.smallModelName = model
       newConfig.smallModelBaseURL = baseURL
       newConfig.smallModelApiKey = apiKey || config.smallModelApiKey
+      newConfig.smallModelMaxTokens = parseInt(maxTokens)
+      // Save reasoning effort for small model if supported
+      if (supportsReasoningEffort) {
+        newConfig.smallModelReasoningEffort = reasoningEffort === 'low' ? false : 
+                                             reasoningEffort === 'high' ? true : undefined
+      }
     }
     
     // Save the updated configuration
@@ -266,18 +390,20 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
     onDone()
   }
   
-  function handleBack() {
-    if (currentScreen === 'confirmation') {
-      setCurrentScreen('model')
-    } else if (currentScreen === 'model') {
-      setCurrentScreen('apiKey')
-    } else if (currentScreen === 'apiKey') {
-      setCurrentScreen('provider')
-    } else if (currentScreen === 'provider') {
-      setCurrentScreen('modelType')
+  // Handle back navigation based on current screen
+  const handleBack = () => {
+    if (currentScreen === 'modelType') {
+      // If we're at the first screen, call onDone to exit
+      onDone()
+    } else {
+      // Remove the current screen from the stack
+      setScreenStack(prev => prev.slice(0, -1))
     }
   }
   
+  // Use escape navigation hook
+  useEscapeNavigation(handleBack, abortController);
+
   function handlePastedApiKey(text: string) {
     // Clean up the pasted text (remove whitespace, etc.)
     const cleanedKey = text.trim()
@@ -318,31 +444,93 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
   function handleModelSearchCursorOffsetChange(offset: number) {
     setModelSearchCursorOffset(offset)
   }
-  
-  // Handle keyboard input
+
+  // Handle Tab key for form navigation in model params screen
   useInput((input, key) => {
-    if (key.escape) {
-      handleBack()
-    }
-    
+    // Handle API key submission on Enter
     if (currentScreen === 'apiKey' && key.return) {
-      // Submit API key on Enter
       if (apiKey) {
         handleApiKeySubmit(apiKey)
       }
+      return
     }
     
+    // Handle confirmation on Enter
     if (currentScreen === 'confirmation' && key.return) {
-      // Confirm selection on Enter
       handleConfirmation()
+      return
     }
     
     // Handle paste event (Ctrl+V or Cmd+V)
     if (currentScreen === 'apiKey' && ((key.ctrl && input === 'v') || (key.meta && input === 'v'))) {
       // We can't directly access clipboard in terminal, but we can show a message
       setModelLoadError('Please use your terminal\'s paste functionality or type the API key manually')
+      return
     }
-  })
+    
+    // Handle backspace for API key input
+    if (currentScreen === 'apiKey' && key.backspace) {
+      setApiKey(apiKey.slice(0, -1))
+      return
+    }
+    
+    // Don't handle any input for model search screen
+    // The TextInput component already handles all input internally
+    
+    // Handle API key input
+    if (currentScreen === 'apiKey' && !key.tab && !key.return && !key.escape) {
+      // Handle API key input
+      setApiKey(apiKey + input)
+    }
+    
+    // Handle Tab key for form navigation in model params screen
+    if (currentScreen === 'modelParams' && key.tab) {
+      const formFields = getFormFieldsForModelParams();
+      // Move to next field
+      setActiveFieldIndex((current) => (current + 1) % formFields.length);
+      return
+    }
+    
+    // Handle Enter key for form submission in model params screen
+    if (currentScreen === 'modelParams' && key.return) {
+      const formFields = getFormFieldsForModelParams();
+      
+      if (activeFieldIndex === formFields.length - 1) {
+        // If on the Continue button, submit the form
+        handleModelParamsSubmit()
+      } 
+      return
+    }
+  });
+
+  // Helper function to get form fields for model params
+  function getFormFieldsForModelParams() {
+    return [
+      {
+        name: 'maxTokens',
+        label: 'Maximum Tokens',
+        description: 'Maximum tokens in response. Empty = default.',
+        placeholder: 'Default',
+        value: maxTokens,
+        component: 'textInput',
+        componentProps: {
+          columns: 10,
+        }
+      },
+      ...(supportsReasoningEffort ? [{
+        name: 'reasoningEffort',
+        label: 'Reasoning Effort',
+        description: 'Controls reasoning depth for complex problems.',
+        value: reasoningEffort,
+        component: 'select'
+      }] : []),
+      {
+        name: 'submit',
+        label: 'Continue →',
+        component: 'button'
+      }
+    ];
+  }
 
   // Render Model Type Selection Screen
   if (currentScreen === 'modelType') {
@@ -357,7 +545,7 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
           paddingY={1}
         >
           <Text bold>
-            {PRODUCT_NAME} Model Configuration {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+            Model Selection {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
           </Text>
           <Box flexDirection="column" gap={1}>
             <Text bold>Which model(s) would you like to configure?</Text>
@@ -414,7 +602,7 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
           paddingY={1}
         >
           <Text bold>
-            {PRODUCT_NAME} API Key Setup {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+            API Key Setup {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
           </Text>
           <Box flexDirection="column" gap={1}>
             <Text bold>Enter your {getProviderLabel(selectedProvider, 0).split(' (')[0]} API key for {modelTypeText}:</Text>
@@ -488,7 +676,7 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
           paddingY={1}
         >
           <Text bold>
-            {PRODUCT_NAME} Model Selection {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+            Model Selection {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
           </Text>
           <Box flexDirection="column" gap={1}>
             <Text bold>Select a model from {getProviderLabel(selectedProvider, availableModels.length).split(' (')[0]} for {modelTypeText}:</Text>
@@ -501,8 +689,6 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
                 ) : (
                   <>This model will be used for simpler tasks to save costs and improve response times.</>
                 )}
-                <Newline />
-                <Text color={theme.suggestion}>★ Highlighted models</Text> are recommended and well-tested.
               </Text>
             </Box>
             
@@ -516,6 +702,7 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
                 cursorOffset={modelSearchCursorOffset}
                 onChangeCursorOffset={handleModelSearchCursorOffsetChange}
                 showCursor={true}
+                focus={true}
               />
             </Box>
             
@@ -550,6 +737,110 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
     )
   }
 
+  if (currentScreen === 'modelParams') {
+    // Define form fields
+    const formFields = getFormFieldsForModelParams();
+
+    return (
+      <Box flexDirection="column" gap={1}>
+        <Box 
+          flexDirection="column" 
+          gap={1} 
+          borderStyle="round"
+          borderColor={theme.secondaryBorder}
+          paddingX={2}
+          paddingY={1}
+        >
+          <Text bold>
+            Model Parameters {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          </Text>
+          <Box flexDirection="column" gap={1}>
+            <Text bold>Configure parameters for {selectedModel}:</Text>
+            <Box flexDirection="column" width={70}>
+              <Text color={theme.secondaryText}>
+                Use <Text color={theme.suggestion}>Tab</Text> to navigate between fields. Press <Text color={theme.suggestion}>Enter</Text> to submit.
+              </Text>
+            </Box>
+            
+            <Box flexDirection="column">
+              {formFields.map((field, index) => (
+                <Box flexDirection="column" marginY={1} key={field.name}>
+                  {field.component !== 'button' ? (
+                    <>
+                      <Text bold color={activeFieldIndex === index ? theme.success : undefined}>
+                        {field.label}
+                      </Text>
+                      {field.description && (
+                        <Text color={theme.secondaryText}>
+                          {field.description}
+                        </Text>
+                      )}
+                    </>
+                  ) : (
+                    <Text bold color={activeFieldIndex === index ? theme.success : undefined}>
+                      {field.label}
+                    </Text>
+                  )}
+                  <Box marginY={1}>
+                    {activeFieldIndex === index ? (
+                      field.component === 'textInput' ? (
+                        <TextInput
+                          value={maxTokens}
+                          onChange={(value) => setMaxTokens(value)}
+                          placeholder={field.placeholder}
+                          columns={field.componentProps?.columns || 50}
+                          showCursor={true}
+                          focus={true}
+                          cursorOffset={maxTokensCursorOffset}
+                          onChangeCursorOffset={setMaxTokensCursorOffset}
+                          onSubmit={() => {
+                            if (index === formFields.length - 1) {
+                              handleModelParamsSubmit();
+                            } else {
+                              setActiveFieldIndex(index + 1);
+                            }
+                          }}
+                        />
+                      ) : field.component === 'select' ? (
+                        <Select
+                          options={reasoningEffortOptions}
+                          onChange={(value) => {
+                            setReasoningEffort(value as ReasoningEffortOption);
+                            // Move to next field after selection
+                            setTimeout(() => {
+                              setActiveFieldIndex(index+1);
+                            }, 100);
+                          }}
+                          defaultValue={reasoningEffort}
+                        />
+                      ) : null
+                    ) : (
+                      field.name === 'maxTokens' ? (
+                        <Text color={theme.secondaryText}>
+                          Current: <Text color={theme.suggestion}>{maxTokens || 'Default'}</Text>
+                        </Text>
+                      ) : field.name === 'reasoningEffort' ? (
+                        <Text color={theme.secondaryText}>
+                          Current: <Text color={theme.suggestion}>{reasoningEffort}</Text>
+                        </Text>
+                      ) : null
+                    )}
+                  </Box>
+                </Box>
+              ))}
+              
+              <Box marginTop={1}>
+                <Text dimColor>
+                  Press <Text color={theme.suggestion}>Tab</Text> to navigate, <Text color={theme.suggestion}>Enter</Text> to continue, or <Text color={theme.suggestion}>Esc</Text> to go back
+                </Text>
+              </Box>
+            </Box>
+          </Box>
+        </Box>
+      </Box>
+    );
+  }
+
   // Render Confirmation Screen
   if (currentScreen === 'confirmation') {
     // Determine what will be updated
@@ -570,7 +861,7 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
           paddingY={1}
         >
           <Text bold>
-            {PRODUCT_NAME} Configuration Confirmation {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+            Configuration Confirmation {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
           </Text>
           <Box flexDirection="column" gap={1}>
             <Text bold>Confirm your model configuration:</Text>
@@ -610,11 +901,25 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
                   <Text color={theme.suggestion}>****{apiKey.slice(-4)}</Text>
                 </Text>
               )}
+              
+              {maxTokens && (
+                <Text>
+                  <Text bold>Max Tokens: </Text>
+                  <Text color={theme.suggestion}>{maxTokens}</Text>
+                </Text>
+              )}
+              
+              {supportsReasoningEffort && (
+                <Text>
+                  <Text bold>Reasoning Effort: </Text>
+                  <Text color={theme.suggestion}>{reasoningEffort}</Text>
+                </Text>
+              )}
             </Box>
             
             <Box marginTop={1}>
               <Text dimColor>
-                Press <Text color={theme.suggestion}>Esc</Text> to go back to model selection or <Text color={theme.suggestion}>Enter</Text> to save configuration
+                Press <Text color={theme.suggestion}>Esc</Text> to go back to model parameters or <Text color={theme.suggestion}>Enter</Text> to save configuration
               </Text>
             </Box>
           </Box>
@@ -635,7 +940,7 @@ export function ModelSelector({ onDone }: Props): React.ReactNode {
         paddingY={1}
       >
         <Text bold>
-          {PRODUCT_NAME} Provider Selection {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
+          Provider Selection {exitState.pending ? `(press ${exitState.keyName} again to exit)` : ''}
         </Text>
         <Box flexDirection="column" gap={1}>
           <Text bold>

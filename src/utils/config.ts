@@ -125,9 +125,13 @@ export type GlobalConfig = {
   largeModelBaseURL?: string
   largeModelName?: string
   largeModelApiKey?: string
+  largeModelReasoningEffort?: 'low' | 'medium' | 'high' | undefined
   smallModelBaseURL?: string
   smallModelName?: string
   smallModelApiKey?: string 
+  smallModelReasoningEffort?: 'low' | 'medium' | 'high' | undefined
+  smallModelMaxTokens?: number
+  largeModelMaxTokens?: number
   maxTokens?: number
   hasAcknowledgedCostThreshold?: boolean
   oauthAccount?: AccountInfo
@@ -160,6 +164,7 @@ export const GLOBAL_CONFIG_KEYS = [
   'primaryProvider',
   'preferredNotifChannel',
   'shiftEnterKeyBindingInstalled',
+  'maxTokens',
 ] as const
 
 export type GlobalConfigKey = (typeof GLOBAL_CONFIG_KEYS)[number]

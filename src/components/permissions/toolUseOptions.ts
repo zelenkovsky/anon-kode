@@ -52,7 +52,7 @@ export function toolUseOptions({
     },
     ...dontShowAgainOptions,
     {
-      label: `No, and tell Claude what to do differently (${chalk.bold.hex(getTheme().warning)('esc')})`,
+      label: `No, and provide instructions (${chalk.bold.hex(getTheme().warning)('esc')})`,
       value: 'no',
     },
   ]

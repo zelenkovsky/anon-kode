@@ -663,7 +663,8 @@ async function queryOpenAI(
 
   //const anthropic = await getAnthropicClient(options.model)
   const openai = getOpenAIClient(modelType)
-  const model = modelType === 'large' ? getGlobalConfig().largeModelName : getGlobalConfig().smallModelName
+  const config = getGlobalConfig()
+  const model = modelType === 'large' ? config.largeModelName : config.smallModelName
   // Prepend system prompt block for easy API identification
   if (options?.prependCLISysprompt) {
     // Log stats about first block for analyzing prefix matching config (see https://console.statsig.com/4aF3Ewatb6xPVpCwxb5nA3/dynamic_configs/claude_cli_system_prompt_prefixes)
@@ -733,12 +734,11 @@ async function queryOpenAI(
     response = await withRetry(async attempt => {
       attemptNumber = attempt
       start = Date.now()
-
-      const s = openai.beta.chat.completions.stream({
+      const opts: OpenAI.ChatCompletionCreateParams = {
         model,
         [maxTokensParam]: Math.max(
             maxThinkingTokens + 1,
-            getMaxTokensForModel(model),
+            getMaxTokensForModelType(modelType),
           ),
         messages: [...openaiSystem, ...openaiMessages],
         temperature: MAIN_QUERY_TEMPERATURE,
@@ -749,7 +749,13 @@ async function queryOpenAI(
         tools: toolSchemas,
         tool_choice: 'auto',
         // metadata: getMetadata(),
-      })
+      }
+      const reasoningEffort = modelType === 'large' ? config.largeModelReasoningEffort : config.smallModelReasoningEffort
+      if(reasoningEffort) {
+        opts.reasoning_effort = reasoningEffort
+      }
+
+      const s = openai.beta.chat.completions.stream(opts)
       return handleMessageStream(s)
     })
   } catch (error) {
@@ -874,16 +880,16 @@ export async function queryHaiku({
     },
   )
 }
-function getMaxTokensForModel(model: string): number {
+function getMaxTokensForModelType(modelType: 'large' | 'small'): number {
   const config = getGlobalConfig()
 
-  if (config.maxTokens) {
-    return config.maxTokens
-  }
-  
-  if (model.startsWith('gpt-4o') || model.startsWith('gpt-4.5')) {
-    return 16384
+  let maxTokens
+
+  if (modelType === 'large') {
+    maxTokens = config.largeModelMaxTokens
+  } else {
+    maxTokens = config.smallModelMaxTokens
   }
 
-  return 8192
+  return maxTokens ?? 8000
 }
