@@ -7,22 +7,15 @@ assignees: ''
 
 ---
 
-**Bug Description**
+## Bug Description
 
 
-**Environment Info**
-- Platform: macos
-- Terminal: ghostty
-- Version: 0.0.16
+## App and Environment Info
+Kode Version: <!-- kode --version -->
+OS: <!-- macos/win -->
 
-**Models**
-- Large
-    - baseURL: https://api.openai.com/v1
-    - model: gpt-4.5-preview
-    - maxTokens: 16384
-    - reasoning effort: undefined
-- Small
-    - baseURL: https://api.openai.com/v1
-    - model: gpt-4.5-preview
-    - maxTokens: 16384
-    - reasoning effort: undefined
+## Models <!-- get from /config or from ~/.koding.json -->
+baseURL:
+name:
+maxTokens:
+reasoning effort:
