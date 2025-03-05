@@ -23,6 +23,10 @@ You can use the onboarding to set up the model, or `/model`.
 If you don't see the models you want on the list, you can manually set them in `/config`
 As long as you have an openai-like endpoint, it should work.
 
+## BUGS
+
+You can submit a bug from within the app with `/bug`, it will open a browser to github issue create with stuff filed out.
+
 ## Warning
 
 Use at own risk.
