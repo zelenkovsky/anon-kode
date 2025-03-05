@@ -9,7 +9,7 @@ import { logError, getInMemoryErrors } from '../utils/log'
 import { env } from '../utils/env'
 import { getGitState, getIsGit, GitRepoState } from '../utils/git'
 import { useTerminalSize } from '../hooks/useTerminalSize'
-import { getAnthropicApiKey } from '../utils/config'
+import { getAnthropicApiKey, getGlobalConfig } from '../utils/config'
 import { USER_AGENT } from '../utils/http'
 import { logEvent } from '../services/statsig'
 import { PRODUCT_NAME } from '../constants/product'
@@ -18,7 +18,7 @@ import { openBrowser } from '../utils/browser'
 import { useExitOnCtrlCD } from '../hooks/useExitOnCtrlCD'
 import { MACRO } from '../constants/macros'
 const GITHUB_ISSUES_REPO_URL =
-  'https://github.com/anthropics/claude-code/issues'
+  'https://github.com/dnakov/anon-kode/issues'
 
 type Props = {
   onDone(result: string): void
@@ -69,54 +69,56 @@ export function Bug({ onDone }: Props): React.ReactNode {
   const exitState = useExitOnCtrlCD(() => process.exit(0))
 
   const submitReport = useCallback(async () => {
-    setStep('submitting')
-    setError(null)
-    setFeedbackId(null)
+    setStep('done')
+    // setStep('submitting')
+    // setError(null)
+    // setFeedbackId(null)
 
-    const reportData = {
-      message_count: messages.length,
-      datetime: new Date().toISOString(),
-      description,
-      platform: env.platform,
-      gitRepo: envInfo.isGit,
-      terminal: env.terminal,
-      version: MACRO.VERSION,
-      transcript: messages,
-      errors: getInMemoryErrors(),
-    }
+    // const reportData = {
+    //   message_count: messages.length,
+    //   datetime: new Date().toISOString(),
+    //   description,
+    //   platform: env.platform,
+    //   gitRepo: envInfo.isGit,
+    //   terminal: env.terminal,
+    //   version: MACRO.VERSION,
+    //   transcript: messages,
+    //   errors: getInMemoryErrors(),
+    // }
 
-    const [result, t] = await Promise.all([
-      submitFeedback(reportData),
-      generateTitle(description),
-    ])
+    // const [result, t] = await Promise.all([
+    //   submitFeedback(reportData),
+    //   generateTitle(description),
+    // ])
 
-    setTitle(t)
+    // setTitle(t)
 
-    if (result.success) {
-      if (result.feedbackId) {
-        setFeedbackId(result.feedbackId)
-        logEvent('tengu_bug_report_submitted', {
-          feedback_id: result.feedbackId,
-        })
-      }
-      setStep('done')
-    } else {
-      setError('Could not submit feedback. Please try again later.')
-      setStep('userInput')
-    }
+    // if (result.success) {
+    //   if (result.feedbackId) {
+    //     setFeedbackId(result.feedbackId)
+    //     logEvent('tengu_bug_report_submitted', {
+    //       feedback_id: result.feedbackId,
+    //     })
+    //   }
+    //   setStep('done')
+    // } else {
+    //   console.log(result)
+    //   setError('Could not submit feedback. Please try again later.')
+    //   setStep('userInput')
+    // }
   }, [description, envInfo.isGit, messages])
 
   useInput((input, key) => {
     // Allow any key press to close the dialog when done or when there's an error
-    if (step === 'done') {
-      if (key.return && feedbackId && title) {
-        // Open GitHub issue URL when Enter is pressed
-        const issueUrl = createGitHubIssueUrl(feedbackId, title, description)
-        void openBrowser(issueUrl)
-      }
-      onDone('<bash-stdout>Bug report submitted</bash-stdout>')
-      return
-    }
+    // if (step === 'done') {
+    //   if (key.return && feedbackId && title) {
+    //     // Open GitHub issue URL when Enter is pressed
+    //     const issueUrl = createGitHubIssueUrl(feedbackId, title, description)
+    //     void openBrowser(issueUrl)
+    //   }
+    //   onDone('<bash-stdout>Bug report submitted</bash-stdout>')
+    //   return
+    // }
 
     if (error) {
       onDone('<bash-stderr>Error submitting bug report</bash-stderr>')
@@ -129,7 +131,9 @@ export function Bug({ onDone }: Props): React.ReactNode {
     }
 
     if (step === 'consent' && (key.return || input === ' ')) {
-      void submitReport()
+      const issueUrl = createGitHubIssueUrl(feedbackId, description.slice(0, 80), description)
+      void openBrowser(issueUrl)
+      onDone('<bash-stdout>Bug report submitted</bash-stdout>')
     }
   })
 
@@ -150,7 +154,7 @@ export function Bug({ onDone }: Props): React.ReactNode {
         </Text>
         {step === 'userInput' && (
           <Box flexDirection="column" gap={1}>
-            <Text>Describe the issue below:</Text>
+            <Text>Describe the issue below and copy/paste any errors you see:</Text>
             <TextInput
               value={description}
               onChange={setDescription}
@@ -184,7 +188,7 @@ export function Bug({ onDone }: Props): React.ReactNode {
                   {env.platform}, {env.terminal}, v{MACRO.VERSION}
                 </Text>
               </Text>
-              {envInfo.gitState && (
+              {/* {envInfo.gitState && (
                 <Text>
                   - Git repo metadata:{' '}
                   <Text dimColor>
@@ -199,10 +203,10 @@ export function Bug({ onDone }: Props): React.ReactNode {
                     {!envInfo.gitState.isClean && ', has local changes'}
                   </Text>
                 </Text>
-              )}
-              <Text>- Current session transcript</Text>
+              )} */}
+              <Text>- Model settings (no api keys)</Text>
             </Box>
-            <Box marginTop={1}>
+            {/* <Box marginTop={1}>
               <Text wrap="wrap" dimColor>
                 We will use your feedback to debug related issues or to improve{' '}
                 {PRODUCT_NAME}&apos;s functionality (eg. to reduce the risk of
@@ -214,7 +218,7 @@ export function Bug({ onDone }: Props): React.ReactNode {
               <Text>
                 Press <Text bold>Enter</Text> to confirm and submit.
               </Text>
-            </Box>
+            </Box> */}
           </Box>
         )}
 
@@ -246,7 +250,7 @@ export function Bug({ onDone }: Props): React.ReactNode {
           ) : step === 'userInput' ? (
             <>Enter to continue · Esc to cancel</>
           ) : step === 'consent' ? (
-            <>Enter to submit · Esc to cancel</>
+            <>Enter to open browser to create GitHub issue · Esc to cancel</>
           ) : null}
         </Text>
       </Box>
@@ -259,14 +263,28 @@ function createGitHubIssueUrl(
   title: string,
   description: string,
 ): string {
-  const body = encodeURIComponent(
-    `**Bug Description**\n${description}\n\n` +
-      `**Environment Info**\n` +
-      `- Platform: ${env.platform}\n` +
-      `- Terminal: ${env.terminal}\n` +
-      `- Version: ${MACRO.VERSION || 'unknown'}\n` +
-      `- Feedback ID: ${feedbackId}\n`,
-  )
+  const globalConfig = getGlobalConfig()
+  const body = encodeURIComponent(`
+## Bug Description
+${description}
+
+## Environment Info
+- Platform: ${env.platform}
+- Terminal: ${env.terminal}
+- Version: ${MACRO.VERSION || 'unknown'}
+
+## Models
+- Large
+    - baseURL: ${globalConfig.largeModelBaseURL}
+    - model: ${globalConfig.largeModelName}
+    - maxTokens: ${globalConfig.largeModelMaxTokens}
+    - reasoning effort: ${globalConfig.largeModelReasoningEffort}
+- Small
+    - baseURL: ${globalConfig.smallModelBaseURL}
+    - model: ${globalConfig.smallModelName}
+    - maxTokens: ${globalConfig.smallModelMaxTokens}
+    - reasoning effort: ${globalConfig.smallModelReasoningEffort}
+`)
   return `${GITHUB_ISSUES_REPO_URL}/new?title=${encodeURIComponent(title)}&body=${body}&labels=user-reported,bug`
 }
 
@@ -290,43 +308,44 @@ async function generateTitle(description: string): Promise<string> {
 async function submitFeedback(
   data: FeedbackData,
 ): Promise<{ success: boolean; feedbackId?: string }> {
-  try {
-    const apiKey = getAnthropicApiKey()
-    if (!apiKey) {
-      return { success: false }
-    }
+  return { success: true, feedbackId: '123' }
+  // try {
+  //   const apiKey = getAnthropicApiKey()
+  //   if (!apiKey) {
+  //     return { success: false }
+  //   }
 
-    const response = await fetch(
-      'https://api.anthropic.com/api/claude_cli_feedback',
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'User-Agent': USER_AGENT,
-          'x-api-key': apiKey,
-        },
-        body: JSON.stringify({
-          content: JSON.stringify(data),
-        }),
-      },
-    )
+  //   const response = await fetch(
+  //     'https://api.anthropic.com/api/claude_cli_feedback',
+  //     {
+  //       method: 'POST',
+  //       headers: {
+  //         'Content-Type': 'application/json',
+  //         'User-Agent': USER_AGENT,
+  //         'x-api-key': apiKey,
+  //       },
+  //       body: JSON.stringify({
+  //         content: JSON.stringify(data),
+  //       }),
+  //     },
+  //   )
 
-    if (response.ok) {
-      const result = await response.json()
-      if (result?.feedback_id) {
-        return { success: true, feedbackId: result.feedback_id }
-      }
-      logError('Failed to submit feedback: request did not return feedback_id')
-      return { success: false }
-    }
+  //   if (response.ok) {
+  //     const result = await response.json()
+  //     if (result?.feedback_id) {
+  //       return { success: true, feedbackId: result.feedback_id }
+  //     }
+  //     logError('Failed to submit feedback: request did not return feedback_id')
+  //     return { success: false }
+  //   }
 
-    logError('Failed to submit feedback:' + response.status)
-    return { success: false }
-  } catch (err) {
-    logError(
-      'Error submitting feedback: ' +
-        (err instanceof Error ? err.message : 'Unknown error'),
-    )
-    return { success: false }
-  }
+  //   logError('Failed to submit feedback:' + response.status)
+  //   return { success: false }
+  // } catch (err) {
+  //   logError(
+  //     'Error submitting feedback: ' +
+  //       (err instanceof Error ? err.message : 'Unknown error'),
+  //   )
+  //   return { success: false }
+  // }
 }

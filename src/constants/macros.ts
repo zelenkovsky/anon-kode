@@ -1,4 +1,6 @@
+import { version } from '../../package.json'
+
 export const MACRO = {
-  VERSION: '0.0.1',
+  VERSION: version,
   README_URL: 'https://docs.anthropic.com/s/claude-code',
 }
