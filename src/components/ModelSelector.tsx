@@ -37,9 +37,6 @@ function useEscapeNavigation(onEscape: () => void, abortController?: AbortContro
   const handledRef = useRef(false);
   
   useInput((input, key) => {
-    if(key.escape) {
-      console.log('Escape key pressed', abortController?.signal?.aborted)
-    }
     if (key.escape && !handledRef.current) {
       handledRef.current = true;
       // Reset after a short delay to allow for multiple escapes
@@ -363,8 +360,9 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
       
       // Save reasoning effort for large model if supported
       if (supportsReasoningEffort) {
-        newConfig.largeModelReasoningEffort = reasoningEffort === 'low' ? false : 
-                                             reasoningEffort === 'high' ? true : undefined
+        newConfig.largeModelReasoningEffort = reasoningEffort
+      } else {
+        newConfig.largeModelReasoningEffort = undefined
       }
     }
     
@@ -375,12 +373,14 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
       newConfig.smallModelMaxTokens = parseInt(maxTokens)
       // Save reasoning effort for small model if supported
       if (supportsReasoningEffort) {
-        newConfig.smallModelReasoningEffort = reasoningEffort === 'low' ? false : 
-                                             reasoningEffort === 'high' ? true : undefined
+        newConfig.smallModelReasoningEffort = reasoningEffort
+      } else {
+        newConfig.smallModelReasoningEffort = undefined
       }
     }
     
     // Save the updated configuration
+    console.log(newConfig)
     saveGlobalConfig(newConfig)
   }
   
@@ -403,22 +403,6 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
   
   // Use escape navigation hook
   useEscapeNavigation(handleBack, abortController);
-
-  function handlePastedApiKey(text: string) {
-    // Clean up the pasted text (remove whitespace, etc.)
-    const cleanedKey = text.trim()
-    if (cleanedKey) {
-      setApiKey(cleanedKey)
-      
-      // Update cursor position to end of text
-      setCursorOffset(cleanedKey.length)
-      
-      // Optionally auto-submit if it looks like a valid API key
-      if (cleanedKey.startsWith('sk-') && cleanedKey.length > 20) {
-        handleApiKeySubmit(cleanedKey)
-      }
-    }
-  }
   
   // Handle cursor offset changes
   function handleCursorOffsetChange(offset: number) {
@@ -428,9 +412,6 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
   // Handle API key changes
   function handleApiKeyChange(value: string) {
     setApiKey(value)
-    
-    // Update cursor position to end of text when typing
-    setCursorOffset(value.length)
   }
   
   // Handle model search query changes
@@ -468,20 +449,6 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
       return
     }
     
-    // Handle backspace for API key input
-    if (currentScreen === 'apiKey' && key.backspace) {
-      setApiKey(apiKey.slice(0, -1))
-      return
-    }
-    
-    // Don't handle any input for model search screen
-    // The TextInput component already handles all input internally
-    
-    // Handle API key input
-    if (currentScreen === 'apiKey' && !key.tab && !key.return && !key.escape) {
-      // Handle API key input
-      setApiKey(apiKey + input)
-    }
     
     // Handle Tab key for form navigation in model params screen
     if (currentScreen === 'modelParams' && key.tab) {
@@ -625,7 +592,6 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
                 cursorOffset={cursorOffset}
                 onChangeCursorOffset={handleCursorOffsetChange}
                 showCursor={true}
-                onPaste={handlePastedApiKey}
               />
             </Box>
             

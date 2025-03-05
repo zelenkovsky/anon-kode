@@ -11,7 +11,6 @@ import {
 } from '../utils/config.js'
 import { getGlobalConfig } from '../utils/config'
 import chalk from 'chalk'
-import { PRODUCT_NAME } from '../constants/product'
 import { useExitOnCtrlCD } from '../hooks/useExitOnCtrlCD'
 
 type Props = {
@@ -86,7 +85,7 @@ export function Config({ onClose }: Props): React.ReactNode {
     },
     {
       id: 'small_apiKey',
-      label: `API key for small model: ${chalk.bold(normalizeApiKeyForConfig(globalConfig.smallModelApiKey))}`,
+      label: `API key for small model`,
       value: globalConfig.smallModelApiKey ?? '',
       type: 'string',
       onChange(value: string) {
@@ -107,6 +106,29 @@ export function Config({ onClose }: Props): React.ReactNode {
       },
     },
     {
+      id: 'smallModelMaxTokens',
+      label: 'Small model max tokens',
+      value: globalConfig.smallModelMaxTokens ?? 8192,
+      type: 'number',
+      onChange(value: number) {
+        const config = { ...getGlobalConfig(), smallModelMaxTokens: value }
+        saveGlobalConfig(config)
+        setGlobalConfig(config)
+      }
+    },
+    {
+      id: 'smallModelReasoningEffort',
+      label: 'Small model reasoning effort',
+      value: globalConfig.smallModelReasoningEffort,
+      options: ['low', 'medium', 'high', 'disabled'],
+      type: 'enum',
+      onChange(value: string) {
+        const config = { ...getGlobalConfig(), smallModelReasoningEffort: value as 'low' | 'medium' | 'high' | undefined }
+        saveGlobalConfig(config)
+        setGlobalConfig(config)
+      }
+    },    
+    {
       id: 'largeModelName',
       label: 'Large model name',
       value: globalConfig.largeModelName ?? '',
@@ -119,7 +141,7 @@ export function Config({ onClose }: Props): React.ReactNode {
     },
     {
       id: 'large_apiKey',
-      label: `API key for large model: ${chalk.bold(normalizeApiKeyForConfig(globalConfig.largeModelApiKey))}`,
+      label: `API key for large model`,
       value: globalConfig.largeModelApiKey ?? '',
       type: 'string',
       onChange(value: string) {
@@ -140,12 +162,24 @@ export function Config({ onClose }: Props): React.ReactNode {
       },
     },
     {
-      id: 'maxTokens',
-      label: 'Max tokens',
-      value: globalConfig.maxTokens ?? 8192,
+      id: 'largeModelMaxTokens',
+      label: 'Large model max tokens',
+      value: globalConfig.largeModelMaxTokens ?? 8192,
       type: 'number',
       onChange(value: number) {
-        const config = { ...getGlobalConfig(), maxTokens: value }
+        const config = { ...getGlobalConfig(), largeModelMaxTokens: value }
+        saveGlobalConfig(config)
+        setGlobalConfig(config)
+      },
+    },
+    {
+      id: 'largeModelReasoningEffort',
+      label: 'Large model reasoning effort',
+      value: globalConfig.largeModelReasoningEffort,
+      options: ['low', 'medium', 'high'],
+      type: 'enum',
+      onChange(value: string) {
+        const config = { ...getGlobalConfig(), largeModelReasoningEffort: value as 'low' | 'medium' | 'high' | undefined }
         saveGlobalConfig(config)
         setGlobalConfig(config)
       },
@@ -332,7 +366,7 @@ export function Config({ onClose }: Props): React.ReactNode {
       >
         <Box flexDirection="column" minHeight={2} marginBottom={1}>
           <Text bold>Settings</Text>
-          <Text dimColor>Configure {PRODUCT_NAME} preferences</Text>
+          <Text dimColor>Configure preferences</Text>
         </Box>
 
         {settings.map((setting, i) => {
@@ -364,9 +398,16 @@ export function Config({ onClose }: Props): React.ReactNode {
                       {setting.value ? normalizeApiKeyForConfig(setting.value) : '(not set)'} {isSelected ? '[Enter to edit]' : ''}
                     </Text>
                   )
+                ) : setting.type === 'number' ? (
+                  <Text color={isSelected ? 'blue' : undefined}>
+                    {setting.value ? setting.value : '(not set)'} {isSelected ? '[Enter to edit]' : ''}
+                  </Text>
+                ) : setting.type === 'enum' ? (
+                  <Text color={isSelected ? 'blue' : undefined}>
+                    {setting.value}
+                  </Text>
                 ) : (
                   <Text color={isSelected ? 'blue' : undefined}>
-
                   </Text>
                 )}
               </Box>

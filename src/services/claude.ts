@@ -890,6 +890,10 @@ function getMaxTokensForModelType(modelType: 'large' | 'small'): number {
   } else {
     maxTokens = config.smallModelMaxTokens
   }
+  
+  if(!maxTokens && config.maxTokens) {
+    maxTokens = config.maxTokens
+  }
 
   return maxTokens ?? 8000
 }
