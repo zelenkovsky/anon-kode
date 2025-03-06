@@ -1,4 +1,9 @@
 # Changelog
+
+## [v0.0.21]
+- Fix #20
+- Fix max token input field and reasoning effort in /config
+
 ## [v0.0.20]
 - Fixed ! bash mode
 - Fixed #3 An assistant message with 'tool_calls' must be followed by a tool result error
