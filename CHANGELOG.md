@@ -1,4 +1,8 @@
 # Changelog
+## [v0.0.20]
+- Fixed ! bash mode
+- Fixed #3 An assistant message with 'tool_calls' must be followed by a tool result error
+- Removed AutoUpdater component
 
 ## [v0.0.19]
 - Added support for LLM servers that don't include `usage` or token counts in their responses (e.g. LM Studio)

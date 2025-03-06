@@ -239,8 +239,9 @@ export async function verifyApiKey(apiKey: string): Promise<boolean> {
 function convertAnthropicMessagesToOpenAIMessages(messages: (UserMessage | AssistantMessage)[]): (OpenAI.ChatCompletionMessageParam | OpenAI.ChatCompletionToolMessageParam)[] {
   const openaiMessages: (OpenAI.ChatCompletionMessageParam | OpenAI.ChatCompletionToolMessageParam)[] = []
   
-  for (const message of messages) {
+  const toolResults: Record<string, OpenAI.ChatCompletionToolMessageParam> = {}
 
+  for (const message of messages) {
     let contentBlocks = []
     if (typeof message.message.content === 'string') {
       contentBlocks = [{
@@ -272,16 +273,31 @@ function convertAnthropicMessagesToOpenAIMessages(messages: (UserMessage | Assis
               id: block.id,
             }],
           })
-      } else if(block.type === 'tool_result') {
-          openaiMessages.push({
-            role: 'tool',
-            content: block.content,
-            tool_call_id: block.tool_use_id,
-          })
+      } if(block.type === 'tool_result') {
+        toolResults[block.tool_use_id] = {
+          role: 'tool',
+          content: block.content,
+          tool_call_id: block.tool_use_id,
+        }
       }
     }
   }
-  return openaiMessages
+
+  const finalMessages: (OpenAI.ChatCompletionMessageParam | OpenAI.ChatCompletionToolMessageParam)[] = []
+  
+  for(const message of openaiMessages) {
+    finalMessages.push(message)
+    
+    if('tool_calls' in message && message.tool_calls) {
+      for(const toolCall of message.tool_calls) {
+        if(toolResults[toolCall.id]) {
+          finalMessages.push(toolResults[toolCall.id])
+        }
+      }
+    }
+  }
+  
+  return finalMessages
 }
 
 function messageReducer(previous: OpenAI.ChatCompletionMessage, item: OpenAI.ChatCompletionChunk): OpenAI.ChatCompletionMessage {
@@ -797,43 +813,6 @@ async function queryOpenAI(
   }
 }
 
-
-async function queryHaikuWithPromptCaching(
-  messages: (UserMessage | AssistantMessage)[],
-  systemPrompt: string[],
-  maxThinkingTokens: number,
-  tools: Tool[],
-  signal: AbortSignal,
-  options?: {
-    dangerouslySkipPermissions: boolean
-    model: string
-    prependCLISysprompt: boolean
-  },
-): Promise<AssistantMessage> {
-  return queryOpenAI('small', messages, systemPrompt, maxThinkingTokens, tools, signal, options)
-}
-
-async function queryHaikuWithoutPromptCaching({
-  systemPrompt,
-  userPrompt,
-  assistantPrompt,
-  signal,
-}: {
-  systemPrompt: string[]
-  userPrompt: string
-  assistantPrompt?: string
-  signal?: AbortSignal
-}): Promise<AssistantMessage> {
-  const messages = [
-    {
-      message: { role: 'user', content: userPrompt },
-      type: 'user',
-      uuid: randomUUID(),
-    }
-  ] as (UserMessage | AssistantMessage)[]
-  return queryOpenAI('small', messages, systemPrompt, 0, [], signal)
-}
-
 export async function queryHaiku({
   systemPrompt = [],
   userPrompt,
@@ -864,19 +843,14 @@ export async function queryHaiku({
       },
     ],
     () => {
-      return enablePromptCaching
-        ? queryHaikuWithPromptCaching({
-            systemPrompt,
-            userPrompt,
-            assistantPrompt,
-            signal,
-          })
-        : queryHaikuWithoutPromptCaching({
-            systemPrompt,
-            userPrompt,
-            assistantPrompt,
-            signal,
-          })
+      const messages = [
+        {
+          message: { role: 'user', content: userPrompt },
+          type: 'user',
+          uuid: randomUUID(),
+        }
+      ] as (UserMessage | AssistantMessage)[]
+      return queryOpenAI('small', messages, systemPrompt, 0, [], signal)      
     },
   )
 }

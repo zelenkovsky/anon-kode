@@ -373,13 +373,13 @@ function PromptInput({
                 </Text>
               )}
               <TokenWarning tokenUsage={tokenUsage} />
-              <AutoUpdater
+              {/* <AutoUpdater
                 debug={debug}
                 onAutoUpdaterResult={onAutoUpdaterResult}
                 autoUpdaterResult={autoUpdaterResult}
                 isUpdating={isAutoUpdating}
                 onChangeIsUpdating={setIsAutoUpdating}
-              />
+              /> */}
             </Box>
           </SentryErrorBoundary>
         </Box>
