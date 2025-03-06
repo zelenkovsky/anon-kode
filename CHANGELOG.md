@@ -1,7 +1,5 @@
 # Changelog
 
-All notable changes to anon-kode will be documented in this file.
-
 ## [v0.0.19]
 - Added support for LLM servers that don't include `usage` or token counts in their responses (e.g. LM Studio)
   - Modified query handling to work with servers that don't return token usage metrics
