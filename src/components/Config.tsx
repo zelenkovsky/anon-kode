@@ -120,7 +120,7 @@ export function Config({ onClose }: Props): React.ReactNode {
       id: 'smallModelReasoningEffort',
       label: 'Small model reasoning effort',
       value: globalConfig.smallModelReasoningEffort,
-      options: ['low', 'medium', 'high', 'disabled'],
+      options: ['low', 'medium', 'high', ''],
       type: 'enum',
       onChange(value: string) {
         const config = { ...getGlobalConfig(), smallModelReasoningEffort: value as 'low' | 'medium' | 'high' | undefined }
@@ -176,7 +176,7 @@ export function Config({ onClose }: Props): React.ReactNode {
       id: 'largeModelReasoningEffort',
       label: 'Large model reasoning effort',
       value: globalConfig.largeModelReasoningEffort,
-      options: ['low', 'medium', 'high'],
+      options: ['low', 'medium', 'high', ''],
       type: 'enum',
       onChange(value: string) {
         const config = { ...getGlobalConfig(), largeModelReasoningEffort: value as 'low' | 'medium' | 'high' | undefined }
@@ -240,8 +240,18 @@ export function Config({ onClose }: Props): React.ReactNode {
       }
 
       if (key.return) {
-        const setting = settings[selectedIndex] as Setting & { type: 'string' }
-        setting.onChange(currentInput)
+        const setting = settings[selectedIndex]
+        if (setting.type === 'string') {
+          setting.onChange(currentInput)
+        } else if (setting.type === 'number') {
+          const numValue = Number(currentInput)
+          if (!isNaN(numValue)) {
+            setting.onChange(numValue)
+          } else {
+            setInputError('Invalid number')
+            return
+          }
+        }
         setEditingString(false)
         setCurrentInput('')
         setInputError(null)
@@ -334,9 +344,9 @@ export function Config({ onClose }: Props): React.ReactNode {
         return
       }
 
-      if (setting.type === 'string') {
+      if (setting.type === 'string' || setting.type === 'number') {
         setEditingString(true)
-        setCurrentInput(setting.value)
+        setCurrentInput(setting.value.toString())
         return
       }
     }
@@ -371,7 +381,7 @@ export function Config({ onClose }: Props): React.ReactNode {
 
         {settings.map((setting, i) => {
           const isSelected = i === selectedIndex
-          const isEditing = isSelected && editingString && setting.type === 'string'
+          const isEditing = isSelected && editingString && (setting.type === 'string' || setting.type === 'number')
 
           return (
             <Box key={setting.id} height={2} minHeight={2}>
@@ -399,9 +409,18 @@ export function Config({ onClose }: Props): React.ReactNode {
                     </Text>
                   )
                 ) : setting.type === 'number' ? (
-                  <Text color={isSelected ? 'blue' : undefined}>
-                    {setting.value ? setting.value : '(not set)'} {isSelected ? '[Enter to edit]' : ''}
-                  </Text>
+                  isEditing ? (
+                    <Box>
+                      <Text backgroundColor="blue" color="white">
+                        {currentInput || ' '}<Text color="white">_</Text>
+                      </Text>
+                      {inputError && <Text color="red"> {inputError}</Text>}
+                    </Box>
+                  ) : (
+                    <Text color={isSelected ? 'blue' : undefined}>
+                      {setting.value ? setting.value : '(not set)'} {isSelected ? '[Enter to edit]' : ''}
+                    </Text>
+                  )
                 ) : setting.type === 'enum' ? (
                   <Text color={isSelected ? 'blue' : undefined}>
                     {setting.value}

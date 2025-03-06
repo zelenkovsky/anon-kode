@@ -646,6 +646,9 @@ function getAssistantMessageFromError(error: unknown): AssistantMessage {
     return createAssistantAPIErrorMessage(INVALID_API_KEY_ERROR_MESSAGE)
   }
   if (error instanceof Error) {
+    if(process.env.NODE_ENV === 'development') {
+      console.log(error)
+    }
     return createAssistantAPIErrorMessage(
       `${API_ERROR_MESSAGE_PREFIX}: ${error.message}`,
     )
@@ -761,10 +764,11 @@ async function queryOpenAI(
         stream: true,
         stream_options: {
           include_usage: true,
-        },
-        tools: toolSchemas,
-        tool_choice: 'auto',
-        // metadata: getMetadata(),
+        }
+      }
+      if(toolSchemas.length > 0) {
+        opts.tools = toolSchemas
+        opts.tool_choice = 'auto'
       }
       const reasoningEffort = modelType === 'large' ? config.largeModelReasoningEffort : config.smallModelReasoningEffort
       if(reasoningEffort) {
