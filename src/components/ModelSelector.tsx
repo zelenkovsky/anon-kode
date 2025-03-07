@@ -115,7 +115,8 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
   const [modelSearchQuery, setModelSearchQuery] = useState<string>('')
   const [modelSearchCursorOffset, setModelSearchCursorOffset] = useState<number>(0)
   const [cursorOffset, setCursorOffset] = useState<number>(0)
-  
+  const [apiKeyEdited, setApiKeyEdited] = useState<boolean>(false)
+
   // Model type options
   const modelTypeOptions = [
     { label: 'Both Large and Small Models', value: 'both' },
@@ -143,6 +144,13 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
     }
   })
   
+  useEffect(() => {
+    if(!apiKeyEdited && selectedProvider) {
+      if(!apiKey && process.env[selectedProvider.toUpperCase() + '_API_KEY']) {
+        setApiKey(process.env[selectedProvider.toUpperCase() + '_API_KEY'] as string)
+      }
+    }
+  }, [selectedProvider, apiKey, apiKeyEdited])
 
   // Create a set of model names from our constants/models.ts for the current provider
   const ourModelNames = new Set(
@@ -411,6 +419,7 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
   
   // Handle API key changes
   function handleApiKeyChange(value: string) {
+    setApiKeyEdited(true)
     setApiKey(value)
   }
   

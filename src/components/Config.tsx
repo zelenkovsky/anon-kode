@@ -357,7 +357,7 @@ export function Config({ onClose }: Props): React.ReactNode {
 
       if (setting.type === 'string' || setting.type === 'number') {
         setEditingString(true)
-        setCurrentInput(setting.value.toString())
+        setCurrentInput(setting.value?.toString() ?? '')
         return
       }
     }

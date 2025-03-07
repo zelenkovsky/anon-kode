@@ -51,14 +51,18 @@ export function getOpenAIClient(type: 'large' | 'small'): OpenAI {
       ),
     )
   }
-  openaiClients[type] = new OpenAI({
-    apiKey,
-    maxRetries: 0, // Disabled auto-retry in favor of manual implementation
-    timeout: parseInt(process.env.API_TIMEOUT_MS || String(60 * 1000), 10),
-    dangerouslyAllowBrowser: true,
-    baseURL: type === 'large' ? config.largeModelBaseURL : config.smallModelBaseURL,
-    httpAgent: config.proxy ? new HttpsProxyAgent(config.proxy) : undefined,
-  })
+  try { 
+    openaiClients[type] = new OpenAI({
+      apiKey,
+      maxRetries: 0, // Disabled auto-retry in favor of manual implementation
+      timeout: parseInt(process.env.API_TIMEOUT_MS || String(60 * 1000), 10),
+      dangerouslyAllowBrowser: true,
+      baseURL: type === 'large' ? config.largeModelBaseURL : config.smallModelBaseURL,
+      httpAgent: config.proxy ? new HttpsProxyAgent(config.proxy) : undefined,
+    })
+  } catch (error) {
+    console.error(chalk.red('Error creating OpenAI client'), error)
+  }
 
   return openaiClients[type]
 }

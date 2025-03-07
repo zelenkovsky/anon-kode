@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.22]
+- Get API key from env if available
+- Add proxy support
+
 ## [v0.0.21]
 - Fix #20
 - Fix max token input field and reasoning effort in /config
