@@ -137,6 +137,7 @@ export type GlobalConfig = {
   oauthAccount?: AccountInfo
   iterm2KeyBindingInstalled?: boolean // Legacy - keeping for backward compatibility
   shiftEnterKeyBindingInstalled?: boolean
+  proxy?: string
 }
 
 export const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
