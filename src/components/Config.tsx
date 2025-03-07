@@ -185,6 +185,17 @@ export function Config({ onClose }: Props): React.ReactNode {
       },
     },
     {
+      id: 'proxy',
+      label: 'proxy used for http request',
+      value: globalConfig.proxy,
+      type: 'string',
+      onChange(value: string) {
+        const config = { ...getGlobalConfig(), proxy: value }
+        saveGlobalConfig(config)
+        setGlobalConfig(config)
+      },
+    },
+    {
       id: 'verbose',
       label: 'Verbose output',
       value: globalConfig.verbose,

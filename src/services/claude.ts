@@ -35,6 +35,7 @@ import type { ChatCompletionStream } from 'openai/lib/ChatCompletionStream'
 import { ContentBlock } from '@anthropic-ai/sdk/resources/messages/messages'
 import { nanoid } from 'nanoid'
 const openaiClients: Record<string, OpenAI> = {}
+import { HttpsProxyAgent } from 'https-proxy-agent';
 
 export function getOpenAIClient(type: 'large' | 'small'): OpenAI {
 
@@ -50,13 +51,13 @@ export function getOpenAIClient(type: 'large' | 'small'): OpenAI {
       ),
     )
   }
-
   openaiClients[type] = new OpenAI({
     apiKey,
     maxRetries: 0, // Disabled auto-retry in favor of manual implementation
     timeout: parseInt(process.env.API_TIMEOUT_MS || String(60 * 1000), 10),
     dangerouslyAllowBrowser: true,
     baseURL: type === 'large' ? config.largeModelBaseURL : config.smallModelBaseURL,
+    httpAgent: config.proxy ? new HttpsProxyAgent(config.proxy) : undefined,
   })
 
   return openaiClients[type]
