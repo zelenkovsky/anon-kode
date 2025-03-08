@@ -379,6 +379,14 @@ async function handleMessageStream(
       }
     }
   }
+  if(finalResponse.choices[0]?.message.reasoning) {
+    contentBlocks.push({
+      type: 'thinking',
+      thinking: finalResponse.choices[0]?.message.reasoning,
+      signature: '',
+    })
+  }
+
   if(finalResponse.choices[0]?.message.content) {
     contentBlocks.push({
       type: 'text',

@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.24]
+- Add thinking and reasoning blocks to the assistant message
+
 ## [v0.0.23]
 - Remove the call to updateTerminalTitle in REPL.tsx
 
