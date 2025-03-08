@@ -316,7 +316,7 @@ export function REPL({
       lastMessage.type === 'user' &&
       typeof lastMessage.message.content === 'string'
     ) {
-      updateTerminalTitle(lastMessage.message.content)
+     // updateTerminalTitle(lastMessage.message.content)
     }
     if (lastMessage.type === 'assistant') {
       setAbortController(null)

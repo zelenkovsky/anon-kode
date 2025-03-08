@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.23]
+- Remove the call to updateTerminalTitle in REPL.tsx
+
 ## [v0.0.22]
 - Get API key from env if available
 - Add proxy support
