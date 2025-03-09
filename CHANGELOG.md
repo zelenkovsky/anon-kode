@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.27]
+- fix lsTool to not show the safety warning to the user
+- fix tool description truncation for openai models
+
 ## [v0.0.26]
 - buffer the rawdog stream
 

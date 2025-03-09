@@ -103,7 +103,7 @@ export const LSTool = {
     const userTree = printTree(createFileTree(result))
 
     // Tree with safety warning for assistant only
-    const assistantTree = userTree + safetyWarning
+    const assistantTree = userTree
 
     if (result.length < MAX_FILES) {
       yield {

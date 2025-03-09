@@ -754,23 +754,17 @@ async function queryOpenAI(
   )
 
 
-  const _openaiSystem = system.map(s => ({
+  const openaiSystem = system.map(s => ({
     role: 'system',
     content: s.text,
   }) as OpenAI.ChatCompletionMessageParam)
-
-  const openaiSystem = [{
-    role: 'system',
-    content: system.map(s => s.text).join('\n'),
-  }]
   
   const openaiMessages = convertAnthropicMessagesToOpenAIMessages(messages)
   const startIncludingRetries = Date.now()
 
   
   for (const tool of toolSchemas) {
-    // if(model.match(/^gpt-|^o\d-mini/)) {
-    if (model.match(/gpt-4o/)) {
+    if(model.match(/^gpt-|^o\d-mini/)) {
       if(tool.function.description.length > 1024) {
         tool.function.description = tool.function.description.slice(0, 1024)
       }
