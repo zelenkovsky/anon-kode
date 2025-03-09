@@ -36,6 +36,7 @@ import { ContentBlock } from '@anthropic-ai/sdk/resources/messages/messages'
 import { nanoid } from 'nanoid'
 const openaiClients: Record<string, OpenAI> = {}
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import { getCompletion } from './openai'
 
 export function getOpenAIClient(type: 'large' | 'small'): OpenAI {
 
@@ -353,7 +354,8 @@ async function handleMessageStream(
   let ttftMs: number | undefined
   
   let message = {} as OpenAI.ChatCompletionMessage
-  // TODO(ben): Consider showing an incremental progress indicator.
+
+
   for await (const chunk of stream) {
     const part = chunk.choices[0]?.delta.content
     message = messageReducer(message, chunk);
@@ -361,15 +363,27 @@ async function handleMessageStream(
       ttftMs = Date.now() - streamStartTime
     }
   }
-  await stream.done()
-  const finalResponse = await stream.finalChatCompletion()
+
+  const finalResponse = {
+    choices: [{
+      message: message,
+      finish_reason: 'stop',
+    }],
+    usage: message.usage,
+  }
   let contentBlocks: ContentBlock[] = []
   for(const m of [message]) {
     if(m.tool_calls) {
       for(const toolCall of m.tool_calls) {
         const tool = toolCall.function
         const toolName = tool.name
-        const toolArgs = JSON.parse(tool.arguments)
+        let toolArgs = {}
+        try {
+          toolArgs = JSON.parse(tool.arguments)
+        } catch (e) {
+          // console.log(e)
+        }
+
         contentBlocks.push({
           type: 'tool_use',
           input: toolArgs,
@@ -379,6 +393,7 @@ async function handleMessageStream(
       }
     }
   }
+
   if(finalResponse.choices[0]?.message.reasoning) {
     contentBlocks.push({
       type: 'thinking',
@@ -403,6 +418,7 @@ async function handleMessageStream(
     type: 'message',
     usage: finalResponse.usage,
   }
+
   return {
     ...finalMessage,
     ttftMs,
@@ -738,17 +754,23 @@ async function queryOpenAI(
   )
 
 
-  const openaiSystem = system.map(s => ({
+  const _openaiSystem = system.map(s => ({
     role: 'system',
     content: s.text,
   }) as OpenAI.ChatCompletionMessageParam)
+
+  const openaiSystem = [{
+    role: 'system',
+    content: system.map(s => s.text).join('\n'),
+  }]
   
   const openaiMessages = convertAnthropicMessagesToOpenAIMessages(messages)
   const startIncludingRetries = Date.now()
 
   
   for (const tool of toolSchemas) {
-    if(model.match(/^gpt-|^o\d-mini/)) {
+    // if(model.match(/^gpt-|^o\d-mini/)) {
+    if (model.match(/gpt-4o/)) {
       if(tool.function.description.length > 1024) {
         tool.function.description = tool.function.description.slice(0, 1024)
       }
@@ -787,8 +809,8 @@ async function queryOpenAI(
       if(reasoningEffort) {
         opts.reasoning_effort = reasoningEffort
       }
-
-      const s = openai.beta.chat.completions.stream(opts)
+      const s = await getCompletion(modelType, opts)
+      
       return handleMessageStream(s)
     })
   } catch (error) {

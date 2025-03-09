@@ -69,6 +69,7 @@
     "semver": "^7.7.1",
     "shell-quote": "^1.8.2",
     "spawn-rx": "^5.1.2",
+    "undici": "^7.4.0",
     "wrap-ansi": "^9.0.0",
     "zod": "^3.24.2",
     "zod-to-json-schema": "^3.24.3"

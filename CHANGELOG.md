@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.25]
+- Rawdog the completion call because everyone sucks
+
 ## [v0.0.24]
 - Add thinking and reasoning blocks to the assistant message
 
