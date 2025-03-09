@@ -52,6 +52,7 @@ export function createStreamProcessor(
   return (async function* () {
     const reader = stream.getReader()
     const decoder = new TextDecoder('utf-8')
+    let buffer = ''
     
     try {
       while (true) {
@@ -61,19 +62,46 @@ export function createStreamProcessor(
         }
         
         const chunk = decoder.decode(value, { stream: true })
-        const lines = chunk
-          .split('\n')
-          .filter(line => line.trim() !== '')
-          .filter(line => line.trim() !== 'data: [DONE]')
+        buffer += chunk
         
-        for (const line of lines) {
+        let lineEnd = buffer.indexOf('\n')
+        while (lineEnd !== -1) {
+          const line = buffer.substring(0, lineEnd).trim()
+          buffer = buffer.substring(lineEnd + 1)
+          
+          if (line === 'data: [DONE]') {
+            continue
+          }
+          
           if (line.startsWith('data: ')) {
-            const data = line.slice(6)
+            const data = line.slice(6).trim()
+            if (!data) continue
+            
             try {
               const parsed = JSON.parse(data) as OpenAI.ChatCompletionChunk
               yield parsed
             } catch (e) {
-              // Skip unparseable data
+              console.error('Error parsing JSON:', data)
+            }
+          }
+          
+          lineEnd = buffer.indexOf('\n')
+        }
+      }
+      
+      // Process any remaining data in the buffer
+      if (buffer.trim()) {
+        const lines = buffer.trim().split('\n')
+        for (const line of lines) {
+          if (line.startsWith('data: ') && line !== 'data: [DONE]') {
+            const data = line.slice(6).trim()
+            if (!data) continue
+            
+            try {
+              const parsed = JSON.parse(data) as OpenAI.ChatCompletionChunk
+              yield parsed
+            } catch (e) {
+              console.error('Error parsing final JSON:', data)
             }
           }
         }

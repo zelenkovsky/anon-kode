@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.26]
+- buffer the rawdog stream
+
 ## [v0.0.25]
 - Rawdog the completion call because everyone sucks
 
