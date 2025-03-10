@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.28]
+- fix max_tokens calculation
+- add dynamic reasoning effort up to the defined max in /config or /model. You can say things like "megathink" and it'll be set to high. This follows claude-code and you can check out `src/utils/thinking.ts` for the details.
+
 ## [v0.0.27]
 - fix lsTool to not show the safety warning to the user
 - fix tool description truncation for openai models

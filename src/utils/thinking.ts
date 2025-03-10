@@ -4,6 +4,7 @@ import { logEvent } from '../services/statsig'
 import { getLastAssistantMessageId } from './messages'
 import { ThinkTool } from '../tools/ThinkTool/ThinkTool'
 import { USE_BEDROCK, USE_VERTEX } from './model'
+import { getGlobalConfig } from './config'
 
 export async function getMaxThinkingTokens(
   messages: Message[],
@@ -95,4 +96,30 @@ export async function getMaxThinkingTokens(
     provider: USE_BEDROCK ? 'bedrock' : USE_VERTEX ? 'vertex' : '1p',
   })
   return 0
+}
+
+
+export async function getReasoningEffort(modelType: 'large' | 'small', messages: Message[]): Promise<'low' | 'medium' | 'high' | null> {
+  const thinkingTokens = await getMaxThinkingTokens(messages)
+  const config = getGlobalConfig()
+  const _maxEffort = modelType === 'large' ? config.largeModelReasoningEffort : config.smallModelReasoningEffort
+  const maxEffort = _maxEffort === 'high' ? 2 : _maxEffort === 'medium' ? 1 : _maxEffort === 'low' ? 0 : null
+  if (!maxEffort) {
+    return null
+  }
+
+  let effort = 0
+  if (thinkingTokens < 10_000) {
+    effort = 0
+  } else if (thinkingTokens >= 10_000 && thinkingTokens < 30_000) {
+    effort = 1
+  } else {
+    effort = 2
+  }
+
+  if (effort > maxEffort) {
+    return _maxEffort
+  }
+
+  return effort === 2 ? 'high' : effort === 1 ? 'medium' : 'low'
 }

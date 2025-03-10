@@ -37,6 +37,7 @@ import { nanoid } from 'nanoid'
 const openaiClients: Record<string, OpenAI> = {}
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import { getCompletion } from './openai'
+import { getReasoningEffort } from 'utils/thinking'
 
 export function getOpenAIClient(type: 'large' | 'small'): OpenAI {
 
@@ -784,10 +785,7 @@ async function queryOpenAI(
       start = Date.now()
       const opts: OpenAI.ChatCompletionCreateParams = {
         model,
-        [maxTokensParam]: Math.max(
-            maxThinkingTokens + 1,
-            getMaxTokensForModelType(modelType),
-          ),
+        [maxTokensParam]: getMaxTokensForModelType(modelType),
         messages: [...openaiSystem, ...openaiMessages],
         temperature: MAIN_QUERY_TEMPERATURE,
         stream: true,
@@ -799,8 +797,11 @@ async function queryOpenAI(
         opts.tools = toolSchemas
         opts.tool_choice = 'auto'
       }
-      const reasoningEffort = modelType === 'large' ? config.largeModelReasoningEffort : config.smallModelReasoningEffort
+      const reasoningEffort = await getReasoningEffort(modelType, messages)
       if(reasoningEffort) {
+        logEvent('debug_reasoning_effort', {
+          effort: reasoningEffort,
+        })
         opts.reasoning_effort = reasoningEffort
       }
       const s = await getCompletion(modelType, opts)
