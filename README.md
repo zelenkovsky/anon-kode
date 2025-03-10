@@ -23,6 +23,19 @@ You can use the onboarding to set up the model, or `/model`.
 If you don't see the models you want on the list, you can manually set them in `/config`
 As long as you have an openai-like endpoint, it should work.
 
+## HOW TO DEV
+
+```
+pnpm i
+pnpm run dev
+pnpm run build
+```
+
+Get some more logs while debugging:
+```
+NODE_ENV=development pnpm run dev --verbose --debug
+```
+
 ## BUGS
 
 You can submit a bug from within the app with `/bug`, it will open a browser to github issue create with stuff filed out.
