@@ -403,7 +403,16 @@ async function handleMessageStream(
     })
   }
 
-  if(finalResponse.choices[0]?.message.content) {
+  // NOTE: For deepseek api, the key for its returned reasoning process is reasoning_content 
+  if (finalResponse.choices[0]?.message.reasoning_content) {
+    contentBlocks.push({
+      type: 'thinking',
+      thinking: finalResponse.choices[0]?.message.reasoning_content,
+      signature: '',
+    })
+  }
+
+  if (finalResponse.choices[0]?.message.content) {
     contentBlocks.push({
       type: 'text',
       text: finalResponse.choices[0]?.message.content,

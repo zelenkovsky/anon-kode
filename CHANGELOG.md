@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.30]
+- support deepseek api reasoning model's reasoning content
+
 ## [v0.0.29]
 - remove Anthropic from /models since it doesn't work yet
 
