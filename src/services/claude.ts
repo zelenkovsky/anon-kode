@@ -403,7 +403,7 @@ async function handleMessageStream(
     })
   }
 
-  // NOTE: For openrouter, the key for its returned reasoning process is reasoning_content 
+  // NOTE: For deepseek api, the key for its returned reasoning process is reasoning_content 
   if (finalResponse.choices[0]?.message.reasoning_content) {
     contentBlocks.push({
       type: 'thinking',
