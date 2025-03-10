@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.29]
+- remove Anthropic from /models since it doesn't work yet
+
+
 ## [v0.0.28]
 - fix max_tokens calculation
 - add dynamic reasoning effort up to the defined max in /config or /model. You can say things like "megathink" and it'll be set to high. This follows claude-code and you can check out `src/utils/thinking.ts` for the details.
