@@ -774,7 +774,7 @@ async function queryOpenAI(
 
   
   for (const tool of toolSchemas) {
-    if(model.match(/^gpt-|^o\d-mini/)) {
+    if(model.match(/^gpt-|^o\d(-mini|-preview)?$/)) {
       if(tool.function.description.length > 1024) {
         tool.function.description = tool.function.description.slice(0, 1024)
       }
@@ -782,7 +782,7 @@ async function queryOpenAI(
     delete tool.function['$schema']
   }
 
-  const maxTokensParam = model.match(/^o\d-mini/) ? 'max_completion_tokens' : 'max_tokens';
+  const maxTokensParam = model.match(/^o\d(-mini|-preview)?$/) ? 'max_completion_tokens' : 'max_tokens';
 
   let start = Date.now()
   let attemptNumber = 0

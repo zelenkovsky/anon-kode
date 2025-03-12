@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.31]
+- fix tool description truncation for openai models #45
+
 ## [v0.0.30]
 - support deepseek api reasoning model's reasoning content
 
