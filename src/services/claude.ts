@@ -358,9 +358,8 @@ async function handleMessageStream(
 
 
   for await (const chunk of stream) {
-    const part = chunk.choices[0]?.delta.content
     message = messageReducer(message, chunk);
-    if (part) {
+    if (chunk?.choices?.[0]?.delta?.content) {
       ttftMs = Date.now() - streamStartTime
     }
   }

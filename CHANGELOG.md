@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.32]
+- handle null chunk.choices idk why
+
 ## [v0.0.31]
 - fix tool description truncation for openai models #45
 
