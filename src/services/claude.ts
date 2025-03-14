@@ -341,7 +341,7 @@ function messageReducer(previous: OpenAI.ChatCompletionMessage, item: OpenAI.Cha
     return acc;
   };
 
-  const choice = item.choices[0];
+  const choice = item.choices?.[0];
   if (!choice) {
     // chunk contains information about usage and token counts
     return previous;
@@ -394,27 +394,27 @@ async function handleMessageStream(
     }
   }
 
-  if(finalResponse.choices[0]?.message.reasoning) {
+  if(finalResponse.choices?.[0]?.message?.reasoning) {
     contentBlocks.push({
       type: 'thinking',
-      thinking: finalResponse.choices[0]?.message.reasoning,
+      thinking: finalResponse.choices?.[0]?.message?.reasoning,
       signature: '',
     })
   }
 
   // NOTE: For deepseek api, the key for its returned reasoning process is reasoning_content 
-  if (finalResponse.choices[0]?.message.reasoning_content) {
+  if (finalResponse.choices?.[0]?.message?.reasoning_content) {
     contentBlocks.push({
       type: 'thinking',
-      thinking: finalResponse.choices[0]?.message.reasoning_content,
+      thinking: finalResponse.choices?.[0]?.message?.reasoning_content,
       signature: '',
     })
   }
 
-  if (finalResponse.choices[0]?.message.content) {
+  if (finalResponse.choices?.[0]?.message?.content) {
     contentBlocks.push({
       type: 'text',
-      text: finalResponse.choices[0]?.message.content,
+      text: finalResponse.choices?.[0]?.message?.content,
       citations: [],
     })
   }
@@ -423,7 +423,7 @@ async function handleMessageStream(
   const finalMessage = {
     role: 'assistant',
     content: contentBlocks,
-    stop_reason: finalResponse.choices[0]?.finish_reason,
+    stop_reason: finalResponse.choices?.[0]?.finish_reason,
     type: 'message',
     usage: finalResponse.usage,
   }
