@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.35]
+- fix stream_options error for mistral models
+
 ## [v0.0.34]
 - fix tool description truncation for openai models
 - fix max_completion_tokens for openai models

@@ -7,8 +7,13 @@ import { logEvent } from "../services/statsig";
 
 export async function getCompletion(
   type: 'large' | 'small', 
-  opts: OpenAI.ChatCompletionCreateParams
+  opts: OpenAI.ChatCompletionCreateParams,
+  attempt: number = 0,
+  maxAttempts: number = 3
 ): Promise<OpenAI.ChatCompletion | AsyncIterable<OpenAI.ChatCompletionChunk>> {
+  if (attempt >= maxAttempts) {
+    throw new Error('Max attempts reached')
+  }
   const config = getGlobalConfig()
   const apiKey = type === 'large' ? config.largeModelApiKey : config.smallModelApiKey
   const baseURL = type === 'large' ? config.largeModelBaseURL : config.smallModelBaseURL
@@ -61,6 +66,8 @@ export async function getCompletion(
   } else if (getSessionState('modelErrors')[`${baseURL}:${opts.model}:max_completion_tokens`]) {
     opts.max_completion_tokens = opts.max_tokens
     delete opts.max_tokens
+  } else if (getSessionState('modelErrors')[`${baseURL}:${opts.model}:stream_options`]) {
+    delete opts.stream_options
   }
 
 
@@ -76,17 +83,28 @@ export async function getCompletion(
     })
     
     if (!response.ok) {
-      const error = await response.json() as { error?: { message: string } }
-      if (error.error?.message?.indexOf('Expected a string with maximum length 1024') !== -1) {
-        setSessionState('modelErrors', {
-          [`${baseURL}:${opts.model}:1024`]: error.error?.message
-        })
-        return getCompletion(type, opts)
-      } else if (error.error?.message?.indexOf("Use 'max_completion_tokens'") !== -1) {
-        setSessionState('modelErrors', {
-          [`${baseURL}:${opts.model}:max_completion_tokens`]: error.error?.message
-        })
-        return getCompletion(type, opts)
+      const error = await response.json() as { error?: { message: string }, message?: string }
+      let errMsg = error.error?.message || error.message || error
+      if (errMsg) {
+        if(typeof errMsg !== 'string') {
+          errMsg = JSON.stringify(errMsg)
+        }
+        if (errMsg?.indexOf('Expected a string with maximum length 1024') > -1) {
+          setSessionState('modelErrors', {
+            [`${baseURL}:${opts.model}:1024`]: errMsg
+          })
+          return getCompletion(type, opts, attempt + 1, maxAttempts)
+        } else if (errMsg?.indexOf("Use 'max_completion_tokens'") > -1) {
+          setSessionState('modelErrors', {
+            [`${baseURL}:${opts.model}:max_completion_tokens`]: errMsg
+          })
+          return getCompletion(type, opts, attempt + 1, maxAttempts)
+        } else if (errMsg?.indexOf('Extra inputs are not permitted') > -1 && errMsg?.indexOf('stream_options') > -1) {
+          setSessionState('modelErrors', {
+            [`${baseURL}:${opts.model}:stream_options`]: errMsg
+          })
+          return getCompletion(type, opts, attempt + 1, maxAttempts)
+        }
       }
       throw new Error(`API request failed: ${error.error?.message || JSON.stringify(error)}`)
     }
