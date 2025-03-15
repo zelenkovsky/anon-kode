@@ -771,18 +771,6 @@ async function queryOpenAI(
   const openaiMessages = convertAnthropicMessagesToOpenAIMessages(messages)
   const startIncludingRetries = Date.now()
 
-  
-  for (const tool of toolSchemas) {
-    if(model.match(/^gpt-|^o\d(-mini|-preview)?$/)) {
-      if(tool.function.description.length > 1024) {
-        tool.function.description = tool.function.description.slice(0, 1024)
-      }
-    }
-    delete tool.function['$schema']
-  }
-
-  const maxTokensParam = model.match(/^o\d(-mini|-preview)?$/) ? 'max_completion_tokens' : 'max_tokens';
-
   let start = Date.now()
   let attemptNumber = 0
   let response
@@ -793,7 +781,7 @@ async function queryOpenAI(
       start = Date.now()
       const opts: OpenAI.ChatCompletionCreateParams = {
         model,
-        [maxTokensParam]: getMaxTokensForModelType(modelType),
+        max_tokens: getMaxTokensForModelType(modelType),
         messages: [...openaiSystem, ...openaiMessages],
         temperature: MAIN_QUERY_TEMPERATURE,
         stream: true,

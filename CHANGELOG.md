@@ -1,8 +1,11 @@
 # Changelog
 
+## [v0.0.34]
+- fix tool description truncation for openai models
+- fix max_completion_tokens for openai models
+
 ## [v0.0.33]
 - null checking choices[0]
-
 
 ## [v0.0.32]
 - handle null chunk.choices idk why
