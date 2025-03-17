@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.37]
+- fix citations error for mistral models
+
 ## [v0.0.36]
 - internal refactor for branding
 - fix tools error for openai models
