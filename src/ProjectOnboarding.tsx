@@ -16,6 +16,7 @@ import { RELEASE_NOTES } from './constants/releaseNotes'
 import { gt } from 'semver'
 import { isDirEmpty } from './utils/file'
 import { MACRO } from './constants/macros'
+import { PROJECT_FILE, PRODUCT_NAME } from './constants/product'
 
 // Function to mark onboarding as complete
 export function markProjectOnboardingComplete(): void {
@@ -73,7 +74,7 @@ export default function ProjectOnboarding({
 
   // Load what we need for onboarding
   // NOTE: This whole component is statically rendered Once
-  const hasClaudeMd = existsSync(join(workspaceDir, 'KODING.md'))
+  const hasClaudeMd = existsSync(join(workspaceDir, PROJECT_FILE))
   const isWorkspaceDirEmpty = isDirEmpty(workspaceDir)
   const needsClaudeMd = !hasClaudeMd && !isWorkspaceDirEmpty
   const showTerminalTip =
@@ -95,7 +96,8 @@ export default function ProjectOnboarding({
                 items.push(
                   <OrderedList.Item key="workspace">
                     <Text color={theme.secondaryText}>
-                      Ask Kode to create a new app or clone a repository.
+                      Ask {PRODUCT_NAME} to create a new app or clone a
+                      repository.
                     </Text>
                   </OrderedList.Item>,
                 )
@@ -104,8 +106,8 @@ export default function ProjectOnboarding({
                 items.push(
                   <OrderedList.Item key="claudemd">
                     <Text color={theme.secondaryText}>
-                      Run <Text color={theme.text}>/init</Text> to create a
-                      KODING.md file with instructions for Anon Kode.
+                      Run <Text color={theme.text}>/init</Text> to create a&nbsp;
+                      {PROJECT_FILE} file with instructions for {PRODUCT_NAME}.
                     </Text>
                   </OrderedList.Item>,
                 )
@@ -125,7 +127,7 @@ export default function ProjectOnboarding({
               items.push(
                 <OrderedList.Item key="questions">
                   <Text color={theme.secondaryText}>
-                    Ask Kode questions about your codebase.
+                    Ask {PRODUCT_NAME} questions about your codebase.
                   </Text>
                 </OrderedList.Item>,
               )
@@ -133,7 +135,7 @@ export default function ProjectOnboarding({
               items.push(
                 <OrderedList.Item key="changes">
                   <Text color={theme.secondaryText}>
-                    Ask Kode to implement changes to your codebase.
+                    Ask {PRODUCT_NAME} to implement changes to your codebase.
                   </Text>
                 </OrderedList.Item>,
               )

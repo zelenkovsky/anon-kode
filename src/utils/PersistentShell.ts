@@ -7,6 +7,7 @@ import { isAbsolute, resolve, join } from 'path'
 import { logError } from './log'
 import * as os from 'os'
 import { logEvent } from '../services/statsig'
+import { PRODUCT_COMMAND } from '../constants/product'
 
 type ExecResult = {
   stdout: string
@@ -22,7 +23,7 @@ type QueuedCommand = {
   reject: (error: Error) => void
 }
 
-const TEMPFILE_PREFIX = os.tmpdir() + '/claude-'
+const TEMPFILE_PREFIX = os.tmpdir() + `/${PRODUCT_COMMAND}-`
 const DEFAULT_TIMEOUT = 30 * 60 * 1000
 const SIGTERM_CODE = 143 // Standard exit code for SIGTERM
 const FILE_SUFFIXES = {

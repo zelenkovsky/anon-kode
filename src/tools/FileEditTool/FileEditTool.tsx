@@ -23,6 +23,7 @@ import { NotebookEditTool } from '../NotebookEditTool/NotebookEditTool'
 import { DESCRIPTION } from './prompt'
 import { applyEdit } from './utils'
 import { hasWritePermission } from '../../utils/permissions/filesystem'
+import { PROJECT_FILE } from '../../constants/product'
 
 const inputSchema = z.strictObject({
   file_path: z.string().describe('The absolute path to the file to modify'),
@@ -238,7 +239,7 @@ export const FileEditTool = {
     readFileTimestamps[fullFilePath] = statSync(fullFilePath).mtimeMs
 
     // Log when editing CLAUDE.md
-    if (fullFilePath.endsWith(`${sep}KODING.md`)) {
+    if (fullFilePath.endsWith(`${sep}${PROJECT_FILE}`)) {
       logEvent('tengu_write_claudemd', {})
     }
 

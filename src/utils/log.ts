@@ -7,6 +7,7 @@ import envPaths from 'env-paths'
 import { promises as fsPromises } from 'fs'
 import type { LogOption, SerializedMessage } from '../types/logs'
 import { MACRO } from '../constants/macros'
+import { PRODUCT_COMMAND } from '../constants/product'
 const IN_MEMORY_ERROR_LOG: Array<{
   error: string
   timestamp: string
@@ -15,7 +16,7 @@ const MAX_IN_MEMORY_ERRORS = 100 // Limit to prevent memory issues
 
 export const SESSION_ID = randomUUID()
 
-const paths = envPaths('claude-cli')
+const paths = envPaths(PRODUCT_COMMAND)
 
 function getProjectDir(cwd: string): string {
   return cwd.replace(/[^a-zA-Z0-9]/g, '-')

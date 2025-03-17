@@ -18,6 +18,7 @@ import { CLAUDE_BASE_DIR } from './env'
 import { logEvent, getDynamicConfig } from '../services/statsig'
 import { lt } from 'semver'
 import { MACRO } from '../constants/macros'
+import { PRODUCT_COMMAND, PRODUCT_NAME } from '../constants/product'
 export type InstallStatus =
   | 'success'
   | 'no_permissions'
@@ -49,11 +50,11 @@ export async function assertMinVersion(): Promise<void> {
       lt(MACRO.VERSION, versionConfig.minVersion)
     ) {
       console.error(`
-It looks like your version of Claude Code (${MACRO.VERSION}) needs an update.
+It looks like your version of ${PRODUCT_NAME} (${MACRO.VERSION}) needs an update.
 A newer version (${versionConfig.minVersion} or higher) is required to continue.
 
 To update, please run:
-    claude update
+    ${PRODUCT_COMMAND} update
 
 This will ensure you have access to the latest features and improvements.
 `)

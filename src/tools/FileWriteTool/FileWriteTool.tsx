@@ -24,6 +24,7 @@ import { getTheme } from '../../utils/theme'
 import { PROMPT } from './prompt'
 import { hasWritePermission } from '../../utils/permissions/filesystem'
 import { getPatch } from '../../utils/diff'
+import { PROJECT_FILE } from '../../constants/product'
 
 const MAX_LINES_TO_RENDER = 10
 const MAX_LINES_TO_RENDER_FOR_ASSISTANT = 16000
@@ -212,7 +213,7 @@ export const FileWriteTool = {
     readFileTimestamps[fullFilePath] = statSync(fullFilePath).mtimeMs
 
     // Log when writing to CLAUDE.md
-    if (fullFilePath.endsWith(`${sep}KODING.md`)) {
+    if (fullFilePath.endsWith(`${sep}${PROJECT_FILE}`)) {
       logEvent('tengu_write_claudemd', {})
     }
 

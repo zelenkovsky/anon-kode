@@ -1,6 +1,6 @@
 #!/usr/bin/env -S node --no-warnings=ExperimentalWarning --enable-source-maps
 import { initSentry } from '../services/sentry'
-import { PRODUCT_NAME } from '../constants/product'
+import { PRODUCT_COMMAND, PRODUCT_NAME } from '../constants/product'
 initSentry() // Initialize Sentry as early as possible
 
 // XXX: Without this line (and the Object.keys, even though it seems like it does nothing!),
@@ -328,7 +328,7 @@ async function parseArgs(
     .join('\n')
 
   program
-    .name('claude')
+    .name(PRODUCT_COMMAND)
     .description(
       `${PRODUCT_NAME} - starts an interactive session by default, use -p/--print for non-interactive output
 
@@ -368,7 +368,7 @@ ${commandList}`,
       ) => {
         await showSetupScreens(dangerouslySkipPermissions, print)
         logEvent('tengu_init', {
-          entrypoint: 'claude',
+          entrypoint: PRODUCT_COMMAND,
           hasInitialPrompt: Boolean(prompt).toString(),
           hasStdin: Boolean(stdinContent).toString(),
           enableArchitect: enableArchitect?.toString() ?? 'false',
@@ -451,7 +451,7 @@ ${commandList}`,
   // claude config
   const config = program
     .command('config')
-    .description('Manage configuration (eg. claude config set -g theme dark)')
+    .description(`Manage configuration (eg. ${PRODUCT_COMMAND} config set -g theme dark)`)
 
   config
     .command('get <key>')
@@ -646,7 +646,7 @@ ${commandList}`,
       const servers = listMCPServers()
       if (Object.keys(servers).length === 0) {
         console.log(
-          'No MCP servers configured. Use `claude mcp add` to add a server.',
+          `No MCP servers configured. Use \`${PRODUCT_COMMAND} mcp add\` to add a server.`,
         )
       } else {
         for (const [name, server] of Object.entries(servers)) {
@@ -707,7 +707,7 @@ ${commandList}`,
           'All .mcprc server approvals and rejections have been reset.',
         )
         console.log(
-          'You will be prompted for approval next time you start Claude Code.',
+          `You will be prompted for approval next time you start ${PRODUCT_NAME}.`,
         )
         process.exit(0)
       })
@@ -716,7 +716,7 @@ ${commandList}`,
   // Doctor command - check installation health
   program
     .command('doctor')
-    .description('Check the health of your Claude Code auto-updater')
+    .description(`Check the health of your ${PRODUCT_NAME} auto-updater`)
     .action(async () => {
       logEvent('tengu_doctor_command', {})
 
@@ -737,7 +737,7 @@ ${commandList}`,
         if (useExternalUpdater) {
           // The external updater intercepts calls to "claude update", which means if we have received
           // this command at all, the extenral updater isn't installed on this machine.
-          console.log('This version of Claude Code is no longer supported.')
+          console.log(`This version of ${PRODUCT_NAME} is no longer supported.`)
           process.exit(0)
         }
 
@@ -946,7 +946,7 @@ ${commandList}`,
     const context = program
       .command('context')
       .description(
-        'Set static context (eg. claude context add-file ./src/*.py)',
+        `Set static context (eg. ${PRODUCT_COMMAND} context add-file ./src/*.py)`,
       )
 
     context

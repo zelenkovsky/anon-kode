@@ -1,5 +1,5 @@
 import { Command } from '../commands'
-import { PRODUCT_NAME } from '../constants/product'
+import { PRODUCT_COMMAND, PRODUCT_NAME } from '../constants/product'
 import * as React from 'react'
 import { Box, Text, useInput } from 'ink'
 import { getTheme } from '../utils/theme'
@@ -43,8 +43,8 @@ export function Help({
 
       <Box marginTop={1} flexDirection="column">
         <Text>
-          {PRODUCT_NAME} is a beta research preview. Always review Claude&apos;s
-          responses, especially when running code. Claude has read access to
+          {PRODUCT_NAME} is a beta research preview. Always review {PRODUCT_NAME}&apos;s
+          responses, especially when running code. {PRODUCT_NAME} has read access to
           files in the current directory and can run commands and edit files
           with your permission.
         </Text>
@@ -54,14 +54,14 @@ export function Help({
         <Box flexDirection="column" marginTop={1}>
           <Text bold>Usage Modes:</Text>
           <Text>
-            • REPL: <Text bold>claude</Text> (interactive session)
+            • REPL: <Text bold>{PRODUCT_COMMAND}</Text> (interactive session)
           </Text>
           <Text>
-            • Non-interactive: <Text bold>claude -p &quot;question&quot;</Text>
+            • Non-interactive: <Text bold>{PRODUCT_COMMAND} -p &quot;question&quot;</Text>
           </Text>
           <Box marginTop={1}>
             <Text>
-              Run <Text bold>claude -h</Text> for all command line options
+              Run <Text bold>{PRODUCT_COMMAND} -h</Text> for all command line options
             </Text>
           </Box>
         </Box>

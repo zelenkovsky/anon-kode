@@ -2,15 +2,15 @@ import { execFileNoThrow } from './execFileNoThrow'
 import { memoize } from 'lodash-es'
 import { join } from 'path'
 import { homedir } from 'os'
-
+import { CONFIG_BASE_DIR, CONFIG_FILE } from '../constants/product'
 // Base directory for all Claude Code data files (except config.json for backwards compatibility)
 export const CLAUDE_BASE_DIR =
-  process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), '.koding')
+  process.env.CLAUDE_CONFIG_DIR ?? join(homedir(), CONFIG_BASE_DIR)
 
 // Config and data paths
 export const GLOBAL_CLAUDE_FILE = process.env.CLAUDE_CONFIG_DIR
   ? join(CLAUDE_BASE_DIR, 'config.json')
-  : join(homedir(), '.koding.json')
+  : join(homedir(), CONFIG_FILE)
 export const MEMORY_DIR = join(CLAUDE_BASE_DIR, 'memory')
 
 const getIsDocker = memoize(async (): Promise<boolean> => {

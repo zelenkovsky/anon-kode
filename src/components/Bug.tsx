@@ -17,8 +17,7 @@ import { API_ERROR_MESSAGE_PREFIX, queryHaiku } from '../services/claude'
 import { openBrowser } from '../utils/browser'
 import { useExitOnCtrlCD } from '../hooks/useExitOnCtrlCD'
 import { MACRO } from '../constants/macros'
-const GITHUB_ISSUES_REPO_URL =
-  'https://github.com/dnakov/anon-kode/issues'
+import { GITHUB_ISSUES_REPO_URL } from '../constants/product'
 
 type Props = {
   onDone(result: string): void

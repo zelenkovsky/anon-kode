@@ -12,6 +12,7 @@ import {
 import { useInterval } from '../hooks/useInterval'
 import { logEvent } from '../services/statsig'
 import { MACRO } from '../constants/macros'
+import { PRODUCT_COMMAND } from 'constants/product'
 type Props = {
   debug: boolean
   isUpdating: boolean
@@ -137,7 +138,7 @@ export function AutoUpdater({
       {(autoUpdaterResult?.status === 'install_failed' ||
         autoUpdaterResult?.status === 'no_permissions') && (
         <Text color={theme.error}>
-          ✗ Auto-update failed &middot; Try <Text bold>claude doctor</Text> or{' '}
+          ✗ Auto-update failed &middot; Try <Text bold>{PRODUCT_COMMAND} doctor</Text> or{' '}
           <Text bold>npm i -g {MACRO.PACKAGE_URL}</Text>
         </Text>
       )}

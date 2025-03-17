@@ -1,10 +1,11 @@
 import React from 'react'
 import type { Command } from '../commands'
 import { Doctor } from '../screens/Doctor'
+import { PRODUCT_NAME } from '../constants/product'
 
 const doctor: Command = {
   name: 'doctor',
-  description: 'Checks the health of your Kode installation',
+  description: `Checks the health of your ${PRODUCT_NAME} installation`,
   isEnabled: true,
   isHidden: false,
   userFacingName() {

@@ -4,9 +4,10 @@ import { getTheme } from '../utils/theme'
 import { PRODUCT_NAME } from '../constants/product'
 import { isDefaultApiKey, getAnthropicApiKey, getGlobalConfig } from '../utils/config'
 import { getCwd } from '../utils/state'
+import { AsciiLogo } from './AsciiLogo'
 import type { WrappedClient } from '../services/mcpClient'
 
-export const MIN_LOGO_WIDTH = 84
+export const MIN_LOGO_WIDTH = 50
 
 export function Logo({
   mcpClients,
@@ -43,24 +44,7 @@ export function Logo({
           <Text color={theme.claude}>✻</Text> Welcome to{' '}
           <Text bold>{PRODUCT_NAME}</Text> <Text>research preview!</Text>
         </Text>
-        <Text>                                                                                                            
-<Text>.....................:=*+=-::...................................................</Text><Newline />
-<Text>...............:##+-:........::+-...............................................</Text><Newline />
-<Text>..............#:................*:..............................................</Text><Newline />
-<Text>............:%:...............#@**.............:#::@:#::#---::::................</Text><Newline />
-<Text>...........+=#:.++...........#-=-:%..........*+---==%:*..#......:=+%%=:.........</Text><Newline />
-<Text>........:*++:..-%@%.==---#:#-*::..-=........%:...:-##:-+.:@-%:............:-+#%#</Text><Newline />
-<Text>......+#:..........=%*%@@@@@@@@#@.:#......:*.....::+*..#=::%@#..:#:@:...@%=:....</Text><Newline />
-<Text>....*=...-:+=.......:#-.:-+@%#=:*+=+.....-=....#+*:=-#-..*@@@#.-*..:+..-+*:..:-#</Text><Newline />
-<Text>..:@.....-...#=......--....%%%=+:%:=.....#....==..*@%#*#@@@@@-=+..-@@..*::@@@@@-</Text><Newline />
-<Text>..:=.....*.....=#:...:-........=-:%.....-*....*:...@:.=@@@@*:==.:@@@@-.*.=@@@@%.</Text><Newline />
-<Text>..-:.............-#:.::.........*-......=-....#:..:+..........:-=+*%@#=*:@@@@@+.</Text><Newline />
-<Text>.=+.....::..........%#:......-@:........*.....*.....%::=%@%+-:.............+@@+.</Text><Newline />
-<Text>++....:#:............-:...=:............*....-=......-#-:......::=**##*-::......</Text><Newline />
-<Text>:...:++...............+-...#@#=====--:.:#....*............:=%%*=-:...........:+*</Text><Newline />
-<Text>.....................................::%:...*-.....................:-+#%%*-::...</Text><Newline />
-
-        </Text>
+        <AsciiLogo />
 
         <>
           <Box paddingLeft={2} flexDirection="column" gap={1}>

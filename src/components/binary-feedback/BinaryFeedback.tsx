@@ -9,6 +9,7 @@ import {
   getBinaryFeedbackResultForChoice,
   logBinaryFeedbackEvent,
 } from './utils.js'
+import { PRODUCT_NAME } from '../../constants/product'
 
 type Props = {
   m1: AssistantMessage
@@ -42,7 +43,7 @@ export function BinaryFeedback({
     },
     [m1, m2, resolve],
   )
-  useNotifyAfterTimeout('Claude needs your input on a response comparison')
+  useNotifyAfterTimeout(`${PRODUCT_NAME} needs your input on a response comparison`)
   return (
     <BinaryFeedbackView
       debug={debug}

@@ -39,9 +39,9 @@ export async function getCompletion(
       }
       logEvent('truncated_tool_description', {
         name: tool.function.name,
-        original_length: tool.function.description.length,
-        truncated_length: str.length,
-        remainder_length: remainder.length,
+        original_length: String(tool.function.description.length),
+        truncated_length: String(str.length),
+        remainder_length: String(remainder.length),
       })
       tool.function.description = str
       toolDescriptions[tool.function.name] = remainder
@@ -68,7 +68,15 @@ export async function getCompletion(
     delete opts.max_tokens
   } else if (getSessionState('modelErrors')[`${baseURL}:${opts.model}:stream_options`]) {
     delete opts.stream_options
-  }
+  } 
+  // else if (getSessionState('modelErrors')[`${baseURL}:${opts.model}:system_role`]) {
+  //   for(let m of opts.messages) {
+  //     if(m.role === 'system') {
+  //       const msg = m as OpenAI.ChatCompletionSystemMessageParam;
+  //       (msg as any).role = 'developer';
+  //     }
+  //   }
+  // }
 
 
   if (opts.stream) {
@@ -104,7 +112,13 @@ export async function getCompletion(
             [`${baseURL}:${opts.model}:stream_options`]: errMsg
           })
           return getCompletion(type, opts, attempt + 1, maxAttempts)
-        }
+        } 
+        // else if (errMsg?.indexOf("'messages[0].role' does not support 'system' with this model") > -1) {
+        //   setSessionState('modelErrors', {
+        //     [`${baseURL}:${opts.model}:system_role`]: errMsg
+        //   })
+        //   return getCompletion(type, opts, attempt + 1, maxAttempts)
+        // }
       }
       throw new Error(`API request failed: ${error.error?.message || JSON.stringify(error)}`)
     }

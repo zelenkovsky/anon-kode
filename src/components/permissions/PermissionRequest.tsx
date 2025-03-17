@@ -18,6 +18,7 @@ import { GrepTool } from '../../tools/GrepTool/GrepTool'
 import { LSTool } from '../../tools/lsTool/lsTool'
 import { FileReadTool } from '../../tools/FileReadTool/FileReadTool'
 import { NotebookReadTool } from '../../tools/NotebookReadTool/NotebookReadTool'
+import { PRODUCT_NAME } from '../../constants/product'
 
 function permissionComponentForTool(tool: Tool) {
   switch (tool) {
@@ -86,7 +87,7 @@ export function PermissionRequest({
   const toolName = toolUseConfirm.tool.userFacingName(
     toolUseConfirm.input as never,
   )
-  useNotifyAfterTimeout(`Claude needs your permission to use ${toolName}`)
+  useNotifyAfterTimeout(`${PRODUCT_NAME} needs your permission to use ${toolName}`)
 
   const PermissionComponent = permissionComponentForTool(toolUseConfirm.tool)
 

@@ -1,12 +1,13 @@
 import React from 'react'
 import { Text } from 'ink'
 import Link from 'ink-link'
+import { PRODUCT_NAME, PRODUCT_COMMAND } from '../constants/product'
 
 export function MCPServerDialogCopy(): React.ReactNode {
   return (
     <>
       <Text>
-        MCP servers provide additional functionality to Claude. They may execute
+        MCP servers provide additional functionality to {PRODUCT_NAME}. They may execute
         code, make network requests, or access system resources via tool calls.
         All tool calls will require your explicit approval before execution. For
         more information, see{' '}
@@ -16,8 +17,7 @@ export function MCPServerDialogCopy(): React.ReactNode {
       </Text>
 
       <Text dimColor>
-        Remember: You can always change these choices later by running `claude
-        mcp reset-mcprc-choices`
+        Remember: You can always change these choices later by running `{PRODUCT_COMMAND} mcp reset-mcprc-choices`
       </Text>
     </>
   )

@@ -82,7 +82,7 @@ export const ArchitectTool = {
     )
 
     if (lastResponse.type !== 'assistant') {
-      throw new Error('Invalid response from Claude API')
+      throw new Error(`Invalid response from API`)
     }
 
     const data = lastResponse.message.content.filter(_ => _.type === 'text')
