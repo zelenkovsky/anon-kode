@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.38]
+- fix citations error for mistral models
+
 ## [v0.0.37]
 - fix citations error for mistral models
 
