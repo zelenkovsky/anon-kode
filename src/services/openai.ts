@@ -24,7 +24,7 @@ export async function getCompletion(
   opts = structuredClone(opts)
 
   if (getSessionState('modelErrors')[`${baseURL}:${opts.model}:1024`]) {
-    for(const tool of opts.tools) {
+    for(const tool of opts.tools || []) {
       if(tool.function.description.length <= 1024) {
         continue
       }

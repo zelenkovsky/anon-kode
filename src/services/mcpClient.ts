@@ -37,6 +37,7 @@ import { MCPTool } from '../tools/MCPTool/MCPTool'
 import { logMCPError } from '../utils/log'
 import { Command } from '../commands'
 import { logEvent } from '../services/statsig'
+import { PRODUCT_COMMAND } from '../constants/product.js'
 
 type McpName = string
 
@@ -240,7 +241,7 @@ async function connectToServer(
 
   const client = new Client(
     {
-      name: 'claude',
+      name: PRODUCT_COMMAND,
       version: '0.1.0',
     },
     {

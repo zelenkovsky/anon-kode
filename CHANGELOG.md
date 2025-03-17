@@ -1,5 +1,9 @@
 # Changelog
 
+## [v0.0.36]
+- internal refactor for branding
+- fix tools error for openai models
+
 ## [v0.0.35]
 - fix stream_options error for mistral models
 

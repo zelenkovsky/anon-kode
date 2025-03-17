@@ -12,7 +12,7 @@ import {
 import { useInterval } from '../hooks/useInterval'
 import { logEvent } from '../services/statsig'
 import { MACRO } from '../constants/macros'
-import { PRODUCT_COMMAND } from 'constants/product'
+import { PRODUCT_COMMAND } from '../constants/product'
 type Props = {
   debug: boolean
   isUpdating: boolean
