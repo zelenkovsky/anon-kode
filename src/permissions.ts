@@ -13,6 +13,7 @@ import { AbortError } from './utils/errors'
 import { logError } from './utils/log'
 import { grantWritePermissionForOriginalDir } from './utils/permissions/filesystem'
 import { getCwd } from './utils/state'
+import { PRODUCT_NAME } from './constants/product'
 
 // Commands that are known to be safe for execution
 const SAFE_COMMANDS = new Set([
@@ -90,7 +91,7 @@ export const bashToolHasPermission = async (
     // This is NOT the same as `fullCommandPrefix.commandPrefix === null`, which means no prefix was detected
     return {
       result: false,
-      message: `Claude requested permissions to use ${tool.name}, but you haven't granted it yet.`,
+      message: `${PRODUCT_NAME} requested permissions to use ${tool.name}, but you haven't granted it yet.`,
     }
   }
 
@@ -101,7 +102,7 @@ export const bashToolHasPermission = async (
     } else {
       return {
         result: false,
-        message: `Claude requested permissions to use ${tool.name}, but you haven't granted it yet.`,
+        message: `${PRODUCT_NAME} requested permissions to use ${tool.name}, but you haven't granted it yet.`,
       }
     }
   }
@@ -120,7 +121,7 @@ export const bashToolHasPermission = async (
     } else {
       return {
         result: false,
-        message: `Claude requested permissions to use ${tool.name}, but you haven't granted it yet.`,
+        message: `${PRODUCT_NAME} requested permissions to use ${tool.name}, but you haven't granted it yet.`,
       }
     }
   }
@@ -145,7 +146,7 @@ export const bashToolHasPermission = async (
   }
   return {
     result: false,
-    message: `Claude requested permissions to use ${tool.name}, but you haven't granted it yet.`,
+    message: `${PRODUCT_NAME} requested permissions to use ${tool.name}, but you haven't granted it yet.`,
   }
 }
 
@@ -203,7 +204,7 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
       }
       return {
         result: false,
-        message: `Claude requested permissions to use ${tool.name}, but you haven't granted it yet.`,
+        message: `${PRODUCT_NAME} requested permissions to use ${tool.name}, but you haven't granted it yet.`,
       }
     }
     // For other tools, check persistent permissions
@@ -215,7 +216,7 @@ export const hasPermissionsToUseTool: CanUseToolFn = async (
 
       return {
         result: false,
-        message: `Claude requested permissions to use ${tool.name}, but you haven't granted it yet.`,
+        message: `${PRODUCT_NAME} requested permissions to use ${tool.name}, but you haven't granted it yet.`,
       }
     }
   }

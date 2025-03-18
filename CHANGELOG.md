@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.39]
+- support non-streaming mode. Set it in /config.
+
 ## [v0.0.38]
 - fix citations error for mistral models
 

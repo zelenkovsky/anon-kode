@@ -138,6 +138,7 @@ export type GlobalConfig = {
   iterm2KeyBindingInstalled?: boolean // Legacy - keeping for backward compatibility
   shiftEnterKeyBindingInstalled?: boolean
   proxy?: string
+  stream?: boolean
 }
 
 export const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
@@ -151,6 +152,7 @@ export const DEFAULT_GLOBAL_CONFIG: GlobalConfig = {
     approved: [],
     rejected: [],
   },
+  stream: true,
 }
 
 export const GLOBAL_CONFIG_KEYS = [

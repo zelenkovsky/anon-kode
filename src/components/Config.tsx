@@ -207,6 +207,17 @@ export function Config({ onClose }: Props): React.ReactNode {
       },
     },
     {
+      id: 'stream',
+      label: 'Stream output',
+      value: globalConfig.stream ?? true,
+      type: 'boolean',
+      onChange(stream: boolean) {
+        const config = { ...getGlobalConfig(), stream }
+        saveGlobalConfig(config)
+        setGlobalConfig(config)
+      },
+    },
+    {
       id: 'theme',
       label: 'Theme',
       value: globalConfig.theme,

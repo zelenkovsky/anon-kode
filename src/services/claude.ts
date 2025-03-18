@@ -350,71 +350,95 @@ function messageReducer(previous: OpenAI.ChatCompletionMessage, item: OpenAI.Cha
 }
 async function handleMessageStream(
   stream: ChatCompletionStream,
-): Promise<StreamResponse> {
+): Promise<OpenAI.ChatCompletion> {
   const streamStartTime = Date.now()
   let ttftMs: number | undefined
   
   let message = {} as OpenAI.ChatCompletionMessage
 
-
+  let id, model, created, object, usage
   for await (const chunk of stream) {
+    if(!id) {
+      id = chunk.id
+    }
+    if(!model) {
+      model = chunk.model
+    }
+    if(!created) {
+      created = chunk.created
+    }
+    if(!object) {
+      object = chunk.object
+    }
+    if(!usage) {
+      usage = chunk.usage
+    }
     message = messageReducer(message, chunk);
     if (chunk?.choices?.[0]?.delta?.content) {
       ttftMs = Date.now() - streamStartTime
     }
   }
-
-  const finalResponse = {
-    choices: [{
-      message: message,
+  return {
+    id,
+    created,
+    model,
+    object,
+    choices: [ { 
+      index: 0, 
+      message, 
       finish_reason: 'stop',
-    }],
-    usage: message.usage,
+      logprobs: undefined,
+      },
+    ],
+    usage,
   }
-  let contentBlocks: ContentBlock[] = []
-  for(const m of [message]) {
-    if(m.tool_calls) {
-      for(const toolCall of m.tool_calls) {
-        const tool = toolCall.function
-        const toolName = tool.name
-        let toolArgs = {}
-        try {
-          toolArgs = JSON.parse(tool.arguments)
-        } catch (e) {
-          // console.log(e)
-        }
+}
 
-        contentBlocks.push({
-          type: 'tool_use',
-          input: toolArgs,
-          name: toolName,
-          id: toolCall.id?.length > 0 ? toolCall.id : nanoid(),
-        })
+function convertOpenAIResponseToAnthropic(response: OpenAI.ChatCompletion) {
+  let contentBlocks: ContentBlock[] = []
+  const message = response.choices[0].message
+  if(message?.tool_calls) {
+    for(const toolCall of message.tool_calls) {
+      const tool = toolCall.function
+      const toolName = tool.name
+      let toolArgs = {}
+      try {
+        toolArgs = JSON.parse(tool.arguments)
+      } catch (e) {
+        // console.log(e)
       }
+
+      contentBlocks.push({
+        type: 'tool_use',
+        input: toolArgs,
+        name: toolName,
+        id: toolCall.id?.length > 0 ? toolCall.id : nanoid(),
+      })
     }
   }
 
-  if(finalResponse.choices?.[0]?.message?.reasoning) {
+
+  if(message.reasoning) {
     contentBlocks.push({
       type: 'thinking',
-      thinking: finalResponse.choices?.[0]?.message?.reasoning,
+      thinking: message?.reasoning,
       signature: '',
     })
   }
 
   // NOTE: For deepseek api, the key for its returned reasoning process is reasoning_content 
-  if (finalResponse.choices?.[0]?.message?.reasoning_content) {
+  if (message.reasoning_content) {
     contentBlocks.push({
       type: 'thinking',
-      thinking: finalResponse.choices?.[0]?.message?.reasoning_content,
+      thinking: message?.reasoning_content,
       signature: '',
     })
   }
 
-  if (finalResponse.choices?.[0]?.message?.content) {
+  if (message.content) {
     contentBlocks.push({
       type: 'text',
-      text: finalResponse.choices?.[0]?.message?.content,
+      text: message?.content,
       citations: [],
     })
   }
@@ -423,15 +447,12 @@ async function handleMessageStream(
   const finalMessage = {
     role: 'assistant',
     content: contentBlocks,
-    stop_reason: finalResponse.choices?.[0]?.finish_reason,
+    stop_reason: response.choices[0].finish_reason,
     type: 'message',
-    usage: finalResponse.usage,
+    usage: response.usage,
   }
 
-  return {
-    ...finalMessage,
-    ttftMs,
-  }
+  return finalMessage
 }
 
 let anthropicClient: Anthropic | null = null
@@ -784,11 +805,14 @@ async function queryOpenAI(
         max_tokens: getMaxTokensForModelType(modelType),
         messages: [...openaiSystem, ...openaiMessages],
         temperature: MAIN_QUERY_TEMPERATURE,
-        stream: true,
-        stream_options: {
+      }
+      if(config.stream) {
+        (opts as OpenAI.ChatCompletionCreateParams).stream = true
+        opts.stream_options = {
           include_usage: true,
         }
       }
+
       if(toolSchemas.length > 0) {
         opts.tools = toolSchemas
         opts.tool_choice = 'auto'
@@ -801,8 +825,15 @@ async function queryOpenAI(
         opts.reasoning_effort = reasoningEffort
       }
       const s = await getCompletion(modelType, opts)
-      
-      return handleMessageStream(s)
+      let finalResponse
+      if(opts.stream) {
+        finalResponse = await handleMessageStream(s)
+      } else {
+        finalResponse = s
+      }
+
+      const r = convertOpenAIResponseToAnthropic(finalResponse)
+      return r
     })
   } catch (error) {
     logError(error)
