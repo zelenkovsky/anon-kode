@@ -46,7 +46,9 @@ export function getOpenAIClient(type: 'large' | 'small'): OpenAI {
   }
   const config = getGlobalConfig()
   const apiKey = type === 'large' ? config.largeModelApiKey : config.smallModelApiKey
-  if (!apiKey) {
+  const apiKeyRequired = type === 'large' ? config.largeModelApiKeyRequired : config.smallModelApiKeyRequired;
+
+  if (apiKeyRequired && !apiKey) {
     console.error(
       chalk.red(
         'Go to /config and set your API keys',
@@ -55,7 +57,7 @@ export function getOpenAIClient(type: 'large' | 'small'): OpenAI {
   }
   try { 
     openaiClients[type] = new OpenAI({
-      apiKey,
+      apiKey: apiKey || "", // Requires a string, but will be ignored if the API key is not needed
       maxRetries: 0, // Disabled auto-retry in favor of manual implementation
       timeout: parseInt(process.env.API_TIMEOUT_MS || String(60 * 1000), 10),
       dangerouslyAllowBrowser: true,

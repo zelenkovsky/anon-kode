@@ -23,7 +23,8 @@ type Setting =
       label: string
       value: boolean
       onChange(value: boolean): void
-      type: 'boolean'
+      type: 'boolean',
+      disabled?: boolean
     }
   | {
       id: string
@@ -31,21 +32,24 @@ type Setting =
       value: string
       options: string[]
       onChange(value: string): void
-      type: 'enum'
+      type: 'enum',
+      disabled?: boolean
     }
   | {
       id: string
       label: string
       value: string
       onChange(value: string): void
-      type: 'string'
+      type: 'string',
+      disabled?: boolean
     }
   | {
       id: string
       label: string
       value: number
       onChange(value: number): void
-      type: 'number'
+      type: 'number',
+      disabled?: boolean
     }
 
 export function Config({ onClose }: Props): React.ReactNode {
@@ -84,10 +88,22 @@ export function Config({ onClose }: Props): React.ReactNode {
       },
     },
     {
+      id: 'small_apiKeyRequired',
+      label: `Small model require API key`,
+      value: globalConfig.smallModelApiKeyRequired ?? false,
+      type: 'boolean',
+      onChange(value: boolean) {
+        const config = { ...getGlobalConfig(), smallModelApiKeyRequired: value }
+        saveGlobalConfig(config)
+        setGlobalConfig(config)
+      },
+    },
+    {
       id: 'small_apiKey',
       label: `API key for small model`,
       value: globalConfig.smallModelApiKey ?? '',
       type: 'string',
+      disabled: !getGlobalConfig().smallModelApiKeyRequired,
       onChange(value: string) {
         const config = { ...getGlobalConfig(), smallModelApiKey: value }
         saveGlobalConfig(config)
@@ -140,10 +156,22 @@ export function Config({ onClose }: Props): React.ReactNode {
       },
     },
     {
+      id: 'large_apiKeyRequired',
+      label: `Large model require API key`,
+      value: globalConfig.largeModelApiKeyRequired ?? false,
+      type: 'boolean',
+      onChange(value: boolean) {
+        const config = { ...getGlobalConfig(), largeModelApiKeyRequired: value }
+        saveGlobalConfig(config)
+        setGlobalConfig(config)
+      },
+    },
+    {
       id: 'large_apiKey',
       label: `API key for large model`,
       value: globalConfig.largeModelApiKey ?? '',
       type: 'string',
+      disabled: !getGlobalConfig().largeModelApiKeyRequired,
       onChange(value: string) {
         const config = { ...getGlobalConfig(), largeModelApiKey: value }
         saveGlobalConfig(config)
@@ -354,6 +382,10 @@ export function Config({ onClose }: Props): React.ReactNode {
         return
       }
 
+      if (setting.disabled === true) {
+        return
+      }
+
       if (setting.type === 'boolean') {
         setting.onChange(!setting.value)
         return
@@ -378,13 +410,26 @@ export function Config({ onClose }: Props): React.ReactNode {
       return
     }
 
-    if (key.upArrow) {
-      setSelectedIndex(prev => Math.max(0, prev - 1))
-    }
-
-    if (key.downArrow) {
-      setSelectedIndex(prev => Math.min(settings.length - 1, prev + 1))
-    }
+    // Find next setting index glossing over disabled fields
+    const moveSelection = (direction: -1 | 1) => {
+      let newIndex = selectedIndex;
+    
+      while (true) {
+        newIndex += direction;
+    
+        // Stop if out of bounds
+        if (newIndex < 0 || newIndex >= settings.length) return;
+    
+        // Set new index if it's not disabled
+        if (!settings[newIndex].disabled) {
+          setSelectedIndex(newIndex);
+          return;
+        }
+      }
+    };
+    
+    if (key.upArrow) moveSelection(-1);
+    if (key.downArrow) moveSelection(1);
   })
 
   return (
@@ -408,13 +453,13 @@ export function Config({ onClose }: Props): React.ReactNode {
           return (
             <Box key={setting.id} height={2} minHeight={2}>
               <Box width={44}>
-                <Text color={isSelected ? 'blue' : undefined}>
+                <Text color={isSelected ? 'blue' : undefined} dimColor={setting.disabled ? true : undefined}>
                   {isSelected ? figures.pointer : ' '} {setting.label}
                 </Text>
               </Box>
               <Box>
                 {setting.type === 'boolean' ? (
-                  <Text color={isSelected ? 'blue' : undefined}>
+                  <Text color={isSelected ? 'blue' : undefined} dimColor={setting.disabled ? true : undefined}>
                     {setting.value.toString()}
                   </Text>
                 ) : setting.type === 'string' ? (
@@ -426,7 +471,7 @@ export function Config({ onClose }: Props): React.ReactNode {
                       {inputError && <Text color="red"> {inputError}</Text>}
                     </Box>
                   ) : (
-                    <Text color={isSelected ? 'blue' : undefined}>
+                    <Text color={isSelected ? 'blue' : undefined} dimColor={setting.disabled ? true : undefined}>
                       {setting.value ? normalizeApiKeyForConfig(setting.value) : '(not set)'} {isSelected ? '[Enter to edit]' : ''}
                     </Text>
                   )
@@ -439,12 +484,12 @@ export function Config({ onClose }: Props): React.ReactNode {
                       {inputError && <Text color="red"> {inputError}</Text>}
                     </Box>
                   ) : (
-                    <Text color={isSelected ? 'blue' : undefined}>
+                    <Text color={isSelected ? 'blue' : undefined} dimColor={setting.disabled ? true : undefined}>
                       {setting.value ? setting.value : '(not set)'} {isSelected ? '[Enter to edit]' : ''}
                     </Text>
                   )
                 ) : setting.type === 'enum' ? (
-                  <Text color={isSelected ? 'blue' : undefined}>
+                  <Text color={isSelected ? 'blue' : undefined} dimColor={setting.disabled ? true : undefined}>
                     {setting.value}
                   </Text>
                 ) : (
