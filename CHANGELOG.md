@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.0.40]
+- settings for optional api keys for like ollama
+
 ## [v0.0.39]
 - support non-streaming mode. Set it in /config.
 
