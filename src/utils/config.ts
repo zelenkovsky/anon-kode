@@ -124,10 +124,12 @@ export type GlobalConfig = {
   primaryProvider?: ProviderType
   largeModelBaseURL?: string
   largeModelName?: string
+  largeModelApiKeyRequired?: boolean 
   largeModelApiKey?: string
   largeModelReasoningEffort?: 'low' | 'medium' | 'high' | undefined
   smallModelBaseURL?: string
   smallModelName?: string
+  smallModelApiKeyRequired?: boolean 
   smallModelApiKey?: string 
   smallModelReasoningEffort?: 'low' | 'medium' | 'high' | undefined
   smallModelMaxTokens?: number
@@ -243,6 +245,7 @@ export function getGlobalConfig(): GlobalConfig {
   return getConfig(GLOBAL_CLAUDE_FILE, DEFAULT_GLOBAL_CONFIG)
 }
 
+// TODO: Decide what to do with this code
 // export function getAnthropicApiKey(): null | string {
 //   const config = getGlobalConfig()
 //   return process.env.ANTHROPIC_API_KEY;

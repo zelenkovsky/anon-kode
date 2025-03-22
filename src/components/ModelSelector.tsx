@@ -386,6 +386,10 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
         newConfig.smallModelReasoningEffort = undefined
       }
     }
+
+    // If an API Key was provided, set key required to true
+    if (newConfig.largeModelApiKey) newConfig.largeModelApiKeyRequired = true;
+    if (newConfig.smallModelApiKey) newConfig.smallModelApiKeyRequired = true;
     
     // Save the updated configuration
     console.log(newConfig)
@@ -442,6 +446,15 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
       if (apiKey) {
         handleApiKeySubmit(apiKey)
       }
+      return
+    }
+
+    if (currentScreen === 'apiKey' && key.tab) {
+      // Skip API key input and fetch models
+      fetchModels()
+        .catch(error => {
+          setModelLoadError(`Error loading models: ${error.message}`)
+        })
       return
     }
     
@@ -625,7 +638,7 @@ export function ModelSelector({ onDone: onDoneProp, abortController }: Props): R
             )}
             <Box marginTop={1}>
               <Text dimColor>
-                Press <Text color={theme.suggestion}>Enter</Text> to continue or <Text color={theme.suggestion}>Esc</Text> to go back
+                Press <Text color={theme.suggestion}>Enter</Text> to continue, <Text color={theme.suggestion}>Tab</Text> to skip using a key, or <Text color={theme.suggestion}>Esc</Text> to go back
               </Text>
             </Box>
           </Box>
