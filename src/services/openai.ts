@@ -240,6 +240,20 @@ export async function getCompletion(
 
   await applyModelErrorFixes(opts, baseURL)
 
+  if (config.primaryProvider === 'custom') {
+    opts.messages = opts.messages.map(msg => {
+      if (msg.role === 'tool' && 
+          Array.isArray(msg.content)
+        ) {
+        return {
+          ...msg,
+          content: msg.content.map(c => c.text).join('\n\n')
+        };
+      }
+      return msg;
+    });
+  }
+
   try {
     if (opts.stream) {
       const response = await fetch(`${baseURL}/chat/completions`, {
