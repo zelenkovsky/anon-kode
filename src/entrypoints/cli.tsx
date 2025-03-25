@@ -45,7 +45,7 @@ import { LogList } from '../screens/LogList'
 import { ResumeConversation } from '../screens/ResumeConversation'
 import { startMCPServer } from './mcp'
 import { env } from '../utils/env'
-import { getCwd, setCwd } from '../utils/state'
+import { getCwd, setCwd, setOriginalCwd } from '../utils/state'
 import { omit } from 'lodash-es'
 import { getCommands } from '../commands'
 import { getNextAvailableLogForkNumber, loadLogList } from '../utils/log'
@@ -178,8 +178,11 @@ async function setup(
   cwd: string,
   dangerouslySkipPermissions?: boolean,
 ): Promise<void> {
-  // Don't await so we don't block startup
-  setCwd(cwd)
+  // Set both current and original working directory if --cwd was provided
+  if (cwd !== process.cwd()) {
+    setOriginalCwd(cwd)
+  }
+  await setCwd(cwd)
 
   // Always grant read permissions for original working dir
   grantReadPermissionForOriginalDir()
